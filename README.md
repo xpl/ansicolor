@@ -8,8 +8,6 @@ npm install ansicolor
 
 ## Why another one?
 
-### 1. Consistency
-
 Other tools lack consistency, failing to solve the simple hierarchy problem:
 
 ```javascript
@@ -32,19 +30,21 @@ console.log (('foo'.cyan + 'bar').red)
 
 Nice!
 
-### 2. Cross-platform rendering
+### Cross-platform rendering
 
-Other tools provide output (rendering), but not input (parsing). Inspection of ANSI colors in arbitrary strings is essential when implementing cross-platform logging — that works not only in terminal, but in browsers too. Modern browsers support color logging with `console.log` — but it does not understand ANSI colors, having a proprietary CSS-based format (Chrome / Firefox). *Ansicolor* solves that problem by converting ANSI color codes to argument lists format that are understandable by browser's consoles:
+Other tools provide output (rendering), but not input (parsing). Inspection of ANSI colors in arbitrary strings is essential when implementing cross-platform logging — that works not only in terminal, but in browsers too. Modern browsers support color logging with `console.log`, but it does not understand ANSI colors — having a proprietary CSS-based format instead. 
 
-```
+**Ansicolor** solves that problem by converting color codes to argument lists that are understandable by browser's consoles:
+
+```javascript
 parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
-assert.deepEqual (parsed.browserConsoleArguments, [
+parsed.browserConsoleArguments /* = [
     "%cfoo%cbar%cbaz",
     "",
     "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
     "background:rgba(0,204,0,1);"
-])
+] */
 
 console.log (...parsed.browserConsoleArguments) // prints with colors in Chrome!
 ```
