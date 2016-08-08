@@ -1,0 +1,43 @@
+{
+  "name": "ansicolor",
+  "version": "1.0.7",
+  "description": "The final solution to the ANSI color/style management. Works in browsers!",
+  "main": "ansicolor.js",
+  "scripts": {
+    "test": "./node_modules/.bin/supervisor -n exit -x ./node_modules/.bin/mocha -- --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xpl/ansicolor.git"
+  },
+  "keywords": [
+    "ansi",
+    "color",
+    "ansi color",
+    "ansi-color",
+    "ansicolor",
+    "ansi styles",
+    "console",
+    "logging",
+    "log",
+    "developer tools",
+    "devtools",
+    "webinspector",
+    "color logging",
+    "tty colors",
+    "tty"
+  ],
+  "author": "Vitaly Gordon <rocket.mind@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xpl/ansicolor/issues"
+  },
+  "homepage": "https://github.com/xpl/ansicolor",
+  "dependencies": {
+    "es7-object-polyfill": "^0.0.1"
+  },
+  "devDependencies": {
+    "mocha": "^2.4.5",
+    "supervisor": "^0.11.0"
+  }
+}
