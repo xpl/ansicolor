@@ -80,7 +80,7 @@ class Code {
         return (this.value === Code.noBrightness) || (this.value === Code.bright) || (this.value === Code.dim) }
 }
 
-Object.assign (Code, {
+O.assign (Code, {
 
     bright:       1,
     dim:          2,
