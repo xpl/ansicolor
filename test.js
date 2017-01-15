@@ -5,11 +5,17 @@ const assert = require ('assert'),
 
 describe ('ansicolor', () => {
 
+    const dbg = s => s.replace (/\u001b\[(\d+)m/g, '\u001b[36m{$1}\u001b[39m')
+
     const same = (a, b) => {
 
         console.log ('\n')
-        console.log (a)
-        console.log (a.replace (/\u001b/g, '\\u001b'))
+
+        console.log ('expected:', b)
+        console.log ('         ', dbg (b), '\n')
+
+        console.log ('actual  :', a)
+        console.log ('         ', dbg (a), '\n')
 
         assert.equal (a, b)
     }
@@ -23,12 +29,12 @@ describe ('ansicolor', () => {
     it ('nice mode works', () => {
 
         same ('foo' + ('bar'.red.underline.bright + 'baz').green.underline + 'qux',
-              'foo\u001b[4m\u001b[32m\u001b[1m\u001b[4m\u001b[31mbar\u001b[32m\u001b[4m\u001b[22mbaz\u001b[31m\u001b[24mqux')
+              'foo\u001b[4m\u001b[32m\u001b[22m\u001b[1m\u001b[4m\u001b[31mbar\u001b[32m\u001b[4m\u001b[22mbaz\u001b[31m\u001b[24mqux')
     })
 
     it ('brightness hierarchy works', () => {
 
-        same (('foo'.dim + 'bar').bright,      '\u001b[2mfoobar\u001b[22m')
+        same (('foo' + 'bar'.dim + 'baz').bright, '\u001b[22m\u001b[1mfoo\u001b[22m\u001b[2mbar\u001b[22m\u001b[1mbaz\u001b[22m')
     })
 
     it ('hierarchy works', () => {
@@ -39,8 +45,8 @@ describe ('ansicolor', () => {
         same (('foo'.underline    + 'bar').underline,   '\u001b[4m\u001b[4mfoo\u001b[4mbar\u001b[24m')
 
 
-        same (('foo'.bright  + 'bar').bright,   '\u001b[1m\u001b[1mfoo\u001b[1mbar\u001b[22m')
-        same (('foo'.dim     + 'bar').dim,      '\u001b[2m\u001b[2mfoo\u001b[2mbar\u001b[22m')
+        same (('foo'.bright  + 'bar').bright,   '\u001b[22m\u001b[1m\u001b[22m\u001b[1mfoo\u001b[22m\u001b[1mbar\u001b[22m')
+        same (('foo'.dim     + 'bar').dim,      '\u001b[22m\u001b[2m\u001b[22m\u001b[2mfoo\u001b[22m\u001b[2mbar\u001b[22m')
         same (('foo'.inverse + 'bar').inverse,  '\u001b[7m\u001b[7mfoo\u001b[7mbar\u001b[27m')
     })
 
