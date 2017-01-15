@@ -4,7 +4,7 @@
   "description": "The final solution to the ANSI color/style management. Works in browsers!",
   "main": "ansicolor.js",
   "scripts": {
-    "test": "./node_modules/.bin/supervisor -n exit -x ./node_modules/.bin/mocha -- --reporter spec"
+    "test": "supervisor -n exit -x mocha -- --reporter spec"
   },
   "repository": {
     "type": "git",
