@@ -76,6 +76,9 @@ class Code {
     get str () {
         return (this.value ? ('\u001b\[' + this.value + 'm') : '') }
 
+    static str (x) {
+        return new Code (x).str }
+
     get isBrightness () {
         return (this.value === Code.noBrightness) || (this.value === Code.bright) || (this.value === Code.dim) }
 }
@@ -120,66 +123,6 @@ class Colors {
         return this.spans.reduce ((str, p) => str + p.text + (p.code ? p.code.str : ''), '') }
 
 /*  Arranges colors in stack and reconstructs proper linear form from that stack    */
-
-    get normalized () {
-
-        const stackBgColor    = [new Code (Code.noBgColor)],
-              stackBrightness = [new Code (Code.noBrightness)]
-        
-        const colorStacks = {
-                    color: [new Code (Code.noColor)],
-                    bgColor: stackBgColor,
-                    bgColorBright: stackBgColor },
-
-              styleStacks = {
-                    bright: stackBrightness,
-                    dim: stackBrightness,
-                    underline: [new Code (Code.noUnderline)],
-                    inverse: [new Code (Code.noInverse)],
-                    italic: [new Code (Code.noItalic)] }
-
-        return O.assign (new Colors (), {
-
-            spans: this.spans.map ((p, i) => {
-
-                switch (p.code.type) {
-
-                    case 'color':
-                    case 'bgColor':
-                    case 'bgColorBright':
-
-                        const stack = colorStacks[p.code.type]
-
-                        if (p.code.subtype !== 'default') {
-                            stack.unshift (p.code)
-                        } else {
-                            if (stack.length > 1) {
-                                stack.shift ()
-                            }
-                            return O.assign ({}, p, { code: stack[0] })
-                        }
-                        break
-
-                    case 'style':
-
-                        styleStacks[p.code.subtype].unshift (p.code)
-                        break
-
-                    case 'unstyle':
-
-                        const s = styleStacks[p.code.subtype]
-                        
-                        if (s.length > 1) {
-                            s.shift ()
-                        }
-
-                        return O.assign ({}, p, { code: s[0] })
-                }
-
-                return p
-            })
-        })
-    }
 
     get styledWithCSS () {
 
@@ -250,7 +193,7 @@ class Colors {
 /*  Parsing front-end   */
 
     static parse (s) {
-        return new Colors (s).normalized.styledWithCSS
+        return new Colors (s).styledWithCSS
     }
 
 /*  Iteration protocol  */
@@ -260,15 +203,23 @@ class Colors {
     }
 }
 
+const replaceAll = (str, a, b) => str.split (a).join (b)
+
+/*  ANSI brightness codes do not overlap, e.g. "{bright}{dim}foo" will be rendered bright (not dim).
+    So we fix it by adding brightness canceling before each brightness code, so the former example gets
+    converted to "{noBrightness}{bright}{noBrightness}{dim}foo" – this way it gets rendered as expected.
+ */
+
 const denormalizeBrightness = s => s.replace (/(\u001b\[(1|2)m)/g, '\u001b[22m$1')
 const normalizeBrightness = s => s.replace (/\u001b\[22m(\u001b\[(1|2)m)/g, '$1')
 
-const normalize = s => new Colors (s).normalized.str
+const wrap = (open, close) => {
 
-const wrap = (open, close) => s => denormalizeBrightness (
-                                    normalize (
-                                        ('\u001b[' + open + 'm') + normalizeBrightness (s) +
-                                        ('\u001b[' + close + 'm')))
+    open  = Code.str (open)
+    close = Code.str (close)
+
+    return s => denormalizeBrightness (open + replaceAll (normalizeBrightness (s), close, open) + close)
+}
 
 colorCodes.forEach ((k, i) => {
     if (k) {
