@@ -122,8 +122,6 @@ class Colors {
     get str () {
         return this.spans.reduce ((str, p) => str + p.text + (p.code ? p.code.str : ''), '') }
 
-/*  Arranges colors in stack and reconstructs proper linear form from that stack    */
-
     get styledWithCSS () {
 
         var color      = new Color (),
