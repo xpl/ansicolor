@@ -78,6 +78,41 @@ describe ('ansicolor', () => {
 
     it ('color names enumeration works', () => {
 
-        assert.deepEqual (color.names, ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'])
+        assert.deepEqual (color.names,
+                                [ 'black',
+                                  'bgBlack',
+                                  'bgBrightBlack',
+                                  'red',
+                                  'bgRed',
+                                  'bgBrightRed',
+                                  'green',
+                                  'bgGreen',
+                                  'bgBrightGreen',
+                                  'yellow',
+                                  'bgYellow',
+                                  'bgBrightYellow',
+                                  'blue',
+                                  'bgBlue',
+                                  'bgBrightBlue',
+                                  'magenta',
+                                  'bgMagenta',
+                                  'bgBrightMagenta',
+                                  'cyan',
+                                  'bgCyan',
+                                  'bgBrightCyan',
+                                  'white',
+                                  'bgWhite',
+                                  'bgBrightWhite',
+                                  'default',
+                                  'bgDefault',
+                                  'bgBrightDefault',
+                                  'bright',
+                                  'dim',
+                                  'italic',
+                                  'underline',
+                                  'inverse' ])
     })
 })
+
+
+

@@ -116,10 +116,10 @@ Will remove all styles/colors from a string:
 color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
 ```
 
-You can get the color names:
+You can get all the API method names:
 
 ```javascript
-color.names // ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white']
+color.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...]
 ```
 
 Happy logging!

@@ -98,6 +98,16 @@ O.assign (Code, {
 
 const camel = (a, b) => a + b.charAt (0).toUpperCase () + b.slice (1)
 
+const replaceAll = (str, a, b) => str.split (a).join (b)
+
+/*  ANSI brightness codes do not overlap, e.g. "{bright}{dim}foo" will be rendered bright (not dim).
+    So we fix it by adding brightness canceling before each brightness code, so the former example gets
+    converted to "{noBrightness}{bright}{noBrightness}{dim}foo" – this way it gets rendered as expected.
+ */
+
+const denormalizeBrightness = s => s.replace (/(\u001b\[(1|2)m)/g, '\u001b[22m$1')
+const normalizeBrightness = s => s.replace (/\u001b\[22m(\u001b\[(1|2)m)/g, '$1')
+
 class Colors {
 
     constructor (s) {
@@ -206,37 +216,33 @@ class Colors {
     [Symbol.iterator] () {
         return this.spans[Symbol.iterator] ()
     }
-}
 
-const replaceAll = (str, a, b) => str.split (a).join (b)
+/*  String wrapping API    */
 
-/*  ANSI brightness codes do not overlap, e.g. "{bright}{dim}foo" will be rendered bright (not dim).
-    So we fix it by adding brightness canceling before each brightness code, so the former example gets
-    converted to "{noBrightness}{bright}{noBrightness}{dim}foo" – this way it gets rendered as expected.
- */
+    static define (method, open, close) {
 
-const denormalizeBrightness = s => s.replace (/(\u001b\[(1|2)m)/g, '\u001b[22m$1')
-const normalizeBrightness = s => s.replace (/\u001b\[22m(\u001b\[(1|2)m)/g, '$1')
+        open  = Code.str (open)
+        close = Code.str (close)
 
-const wrap = (open, close) => {
-
-    open  = Code.str (open)
-    close = Code.str (close)
-
-    return s => denormalizeBrightness (open + replaceAll (normalizeBrightness (s), close, open) + close)
+        this[method] = s => denormalizeBrightness (open + replaceAll (normalizeBrightness (s), close, open) + close);
+        
+        (this.names = this.names || []).push (method)
+    }
 }
 
 colorCodes.forEach ((k, i) => {
     if (k) {
-        Colors[k]                     = wrap (30  + i, Code.noColor)
-        Colors[camel ('bg',       k)] = wrap (40  + i, Code.noBgColor)
-        Colors[camel ('bgBright', k)] = wrap (100 + i, Code.noBgColor) } })
+        Colors.define (k,                      30 + i, Code.noColor)
+        Colors.define (camel ('bg', k),        40 + i, Code.noBgColor)
+        Colors.define (camel ('bgBright', k), 100 + i, Code.noBgColor)
+    }
+})
 
 styleCodes.forEach ((k, i) => {
     if (k) {
-        Colors[k] = wrap (i, ((k === 'bright') || (k === 'dim')) ? Code.noBrightness : (20 + i)) } })
-
-Colors.names = colorCodes.filter (x => x && (x !== 'default'))
+        Colors.define (k, i, ((k === 'bright') || (k === 'dim')) ? Code.noBrightness : (20 + i))
+    }
+})
 
 module.exports = Colors
 
