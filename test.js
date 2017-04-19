@@ -75,4 +75,9 @@ describe ('ansicolor', () => {
         assert.equal ('foofoo', color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m'))
         assert.equal ('bar',    color.strip ('\x1b[0;33;49;3;9;4mbar\x1b[0m'))
     })
+
+    it ('color names enumeration works', () => {
+
+        assert.deepEqual (color.names, ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'])
+    })
 })

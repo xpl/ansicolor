@@ -236,6 +236,8 @@ styleCodes.forEach ((k, i) => {
     if (k) {
         Colors[k] = wrap (i, ((k === 'bright') || (k === 'dim')) ? Code.noBrightness : (20 + i)) } })
 
+Colors.names = colorCodes.filter (x => x && (x !== 'default'))
+
 module.exports = Colors
 
 
