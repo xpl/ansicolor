@@ -108,6 +108,14 @@ Converting parsed array to argument list (acceptable by Chrome's `console.log`):
 console.log (...parsed.browserConsoleArguments)
 ```
 
+## Stripping
+
+Will remove all styles/colors from a string:
+
+```javascript
+color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
+```
+
 Happy logging!
 
 

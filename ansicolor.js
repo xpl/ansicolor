@@ -120,7 +120,8 @@ class Colors {
     }
 
     get str () {
-        return this.spans.reduce ((str, p) => str + p.text + (p.code ? p.code.str : ''), '') }
+        return this.spans.reduce ((str, p) => str + p.text + (p.code ? p.code.str : ''), '')
+    }
 
 /*  Arranges colors in stack and reconstructs proper linear form from that stack    */
 
@@ -194,6 +195,12 @@ class Colors {
 
     static parse (s) {
         return new Colors (s).styledWithCSS
+    }
+
+/*  Stripping   */
+
+    static strip (s) {
+        return s.replace (/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g, '') // hope V8 caches the regexp
     }
 
 /*  Iteration protocol  */
