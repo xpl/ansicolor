@@ -86,6 +86,18 @@ All supported options:
     .bright.dim.italic.underline.inverse // italic may lack support on your platform
 ```
 
+You can get all the API method names that do string wrapping:
+
+```javascript
+color.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
+```
+
+Will remove all styles/colors from a string:
+
+```javascript
+color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
+```
+
 ## Converting to CSS
 
 Parsing arbitrary strings styled with ANSI escape codes:
@@ -106,20 +118,6 @@ Converting parsed array to argument list (acceptable by Chrome's `console.log`):
 
 ```javascript
 console.log (...parsed.browserConsoleArguments)
-```
-
-## Additional stuff
-
-Will remove all styles/colors from a string:
-
-```javascript
-color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
-```
-
-You can get all the API method names:
-
-```javascript
-color.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
 ```
 
 Happy logging!
