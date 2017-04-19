@@ -119,7 +119,7 @@ color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001
 You can get all the API method names:
 
 ```javascript
-color.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...]
+color.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
 ```
 
 Happy logging!
