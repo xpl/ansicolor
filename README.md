@@ -11,7 +11,7 @@ npm install ansicolor
 Other tools lack consistency, failing to solve the simple hierarchy problem:
 
 ```javascript
-require ('colors') // most popular color utility
+require ('colors') // a popular color utility
 
 console.log (('foo'.cyan + 'bar').red)
 ```
