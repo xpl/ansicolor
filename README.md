@@ -44,15 +44,6 @@ console.log (('foo'.cyan + 'bar').red)
 
 Nice!
 
-### Cross-platform rendering
-
-
-**Ansicolor** solves that problem by converting color codes to argument lists that are understandable by browser's consoles:
-
-```javascript
-
-```
-
 ## Crash course
 
 String wrapping (safe):
