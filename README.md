@@ -113,7 +113,7 @@ Parsing arbitrary strings styled with ANSI escape codes:
 parsed = color.parse ('foo'.bgBrightRed + 'bar')       
 ```
 
-Will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists '.spans' property for obtaining the actual array:
+Will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists `.spans` property for obtaining the actual array:
 
 ```javascript
 parsed.spans // [{ css: 'background:rgba(255,51,0,1);', text: 'foo' },
