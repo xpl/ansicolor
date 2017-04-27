@@ -166,17 +166,15 @@ class Colors {
 
                 const foreColor = color.defaultBrightness (brightness)
 
-                const styledPart = O.assign (clean ({
+                const styledSpan = O.assign (
 
-                    css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted),
-                    inverted: !!inverted,
-                    underline: !!underline,
-                    italic: !!italic,
-                    bold: !!bold,
-                    color: foreColor.clean,
-                    bgColor: bgColor.clean
+                    clean ({ bold: !!bold, color: foreColor.clean, bgColor: bgColor.clean }),
+                    
+                    { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },
 
-                }), p)
+                    p)
+
+                for (const k of styles) { styledSpan[k] = true }
 
                 if (c.isBrightness) {
 
@@ -195,7 +193,7 @@ class Colors {
                     }
                 }
 
-                return styledPart
+                return styledSpan
 
             }).filter (s => s.text.length > 0)
         })
