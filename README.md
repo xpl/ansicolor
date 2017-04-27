@@ -16,8 +16,8 @@ npm install ansicolor
 ## Recent updates / changelog
 
 - You can now change the default RGB values for CSS output
-- '.parse ()' now returns full span style data (ex. `{ italic: true, bgColor: { name: 'red', dim: true }, ...`)
-- '.strip ()' for removing ANSI codes
+- `.parse ()` now returns full span style data (ex. `{ italic: true, bgColor: { name: 'red', dim: true }, ...`)
+- `.strip ()` for removing ANSI codes
 - `.names` for run-time reflection
 
 ## Why another one?
