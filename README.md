@@ -6,6 +6,13 @@ A quality library for the ANSI color/style management.
 npm install ansicolor
 ```
 
+## What for
+
+- String coloring with ANSI escape codes
+- Extracting/removing ANSI style data from strings
+- Converting ANSI styles to a WebInspector-compatible output
+- A middleware for your platform-agnostic logging system
+
 ## Why another one?
 
 Other tools lack consistency, failing to solve the simple hierarchy problem:
