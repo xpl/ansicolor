@@ -118,6 +118,8 @@ assert.deepEqual (
         text: 'bar' } ])
 ```
 
+## Custom color theme
+
 You can change the default RGB values:
 
 ```javascript
