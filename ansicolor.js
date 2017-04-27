@@ -1,9 +1,13 @@
 "use strict";
 
+/*  ------------------------------------------------------------------------ */
+
+const O = Object
+
+/*  ------------------------------------------------------------------------ */
+
 const
 
-    O = require ('es7-object-polyfill'),
-      
     colorCodes = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', '', 'default'],
     styleCodes = ['', 'bright', 'dim', 'italic', 'underline', '', '', 'inverse'],
 
@@ -19,30 +23,53 @@ const
                     style:         styleCodes,
                     unstyle:       styleCodes    }
 
+
+/*  ------------------------------------------------------------------------ */
+
+const clean = obj => {
+                for (const k in obj) { if (!obj[k]) { delete obj[k] } }
+                return obj
+            }
+
+/*  ------------------------------------------------------------------------ */
+
 class Color {
 
     constructor (background, name, brightness) {
 
         this.background = background
-        this.name       = name
+        this.name = name
         this.brightness = brightness
     }
 
     get inverse () {
-        return new Color (!this.background, this.name || (this.background ? 'black' : 'white'), this.brightness) }
+        return new Color (!this.background, this.name || (this.background ? 'black' : 'white'), this.brightness)
+    }
 
-    css (inverted, brightness_) {
+    get clean () {
+        return this.name &&
+              (this.name !== 'default') && clean ({ name:   this.name,
+                                                    bright: this.brightness === Code.bright,
+                                                    dim:    this.brightness === Code.dim })
+    }
+
+    defaultBrightness (value) {
+
+        return new Color (this.background, this.name, this.brightness || value)
+    }
+
+    css (inverted) {
 
         const color = inverted ? this.inverse : this
 
-        const brightness = color.brightness || brightness_
-
         const prop = (color.background ? 'background:' : 'color:'),
-              rgb  = ((brightness === Code.bright) ? Colors.rgbBright : Colors.rgb)[color.name]
+              rgb  = ((this.brightness === Code.bright) ? Colors.rgbBright : Colors.rgb)[color.name]
 
-        return rgb ? (prop + 'rgba(' + [...rgb, (brightness === Code.dim) ? 0.5 : 1].join (',') + ');') : ''
+        return rgb ? (prop + 'rgba(' + [...rgb, (this.brightness === Code.dim) ? 0.5 : 1].join (',') + ');') : ''
     }
 }
+
+/*  ------------------------------------------------------------------------ */
 
 class Code {
 
@@ -78,6 +105,8 @@ O.assign (Code, {
     noBgColor:    49
 })
 
+/*  ------------------------------------------------------------------------ */
+
 const camel = (a, b) => a + b.charAt (0).toUpperCase () + b.slice (1)
 
 const replaceAll = (str, a, b) => str.split (a).join (b)
@@ -89,6 +118,8 @@ const replaceAll = (str, a, b) => str.split (a).join (b)
 
 const denormalizeBrightness = s => s.replace (/(\u001b\[(1|2)m)/g, '\u001b[22m$1')
 const normalizeBrightness = s => s.replace (/\u001b\[22m(\u001b\[(1|2)m)/g, '$1')
+
+/*  ------------------------------------------------------------------------ */
 
 class Colors {
 
@@ -124,20 +155,34 @@ class Colors {
 
         return O.assign (new Colors (), {
 
-            spans: this.spans.map (p => { const c = p.code
+            spans: this.spans.map (p => {
+
+                const c = p.code
 
                 const inverted  = styles.has ('inverse'),
                       underline = styles.has ('underline')   ? 'font-style: underline;' : '',                      
                       italic    = styles.has ('italic')      ? 'text-decoration: italic;' : '',
                       bold      = brightness === Code.bright ? 'font-weight: bold;' : ''
 
-                const styledPart = O.assign ({ css: bold + italic + underline +
-                                                        color  .css (inverted, brightness) +
-                                                        bgColor.css (inverted) }, p)
-                if (c.isBrightness) {
-                    brightness = c.value }
+                const foreColor = color.defaultBrightness (brightness)
 
-                else {
+                const styledPart = O.assign (clean ({
+
+                    css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted),
+                    inverted: !!inverted,
+                    underline: !!underline,
+                    italic: !!italic,
+                    bold: !!bold,
+                    color: foreColor.clean,
+                    bgColor: bgColor.clean
+
+                }), p)
+
+                if (c.isBrightness) {
+
+                    brightness = c.value
+                
+                } else {
 
                     switch (p.code.type) {
 
@@ -146,7 +191,9 @@ class Colors {
                         case 'bgColorBright': bgColor = new Color (true,  c.subtype, Code.bright); break
 
                         case 'style'  : styles.add    (c.subtype); break
-                        case 'unstyle': styles.delete (c.subtype); break } }
+                        case 'unstyle': styles.delete (c.subtype); break
+                    }
+                }
 
                 return styledPart
 
@@ -214,6 +261,8 @@ class Colors {
     }
 }
 
+/*  ------------------------------------------------------------------------ */
+
 Colors.rgb = {
 
     black:   [0,     0,   0],
@@ -238,6 +287,8 @@ Colors.rgbBright = {
     white:   [255, 255, 255]
 }
 
+/*  ------------------------------------------------------------------------ */
+
 colorCodes.forEach ((k, i) => {
     if (k) {
         Colors.define (k,                      30 + i, Code.noColor)
@@ -252,6 +303,9 @@ styleCodes.forEach ((k, i) => {
     }
 })
 
+/*  ------------------------------------------------------------------------ */
+
 module.exports = Colors
 
+/*  ------------------------------------------------------------------------ */
 

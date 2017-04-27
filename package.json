@@ -33,9 +33,6 @@
     "url": "https://github.com/xpl/ansicolor/issues"
   },
   "homepage": "https://github.com/xpl/ansicolor",
-  "dependencies": {
-    "es7-object-polyfill": "^0.0.1"
-  },
   "devDependencies": {
     "mocha": "^2.4.5",
     "supervisor": "^0.11.0"

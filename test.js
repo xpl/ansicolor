@@ -53,12 +53,18 @@ describe ('ansicolor', () => {
 
     it ('basic parsing works', () => {
 
-        const parsed = color.parse ('foo'.bgBrightRed + 'bar')
+        const parsed = color.parse ('foo'.bgBrightRed.italic + 'bar'.red.dim)
 
         assert.deepEqual ([...parsed], parsed.spans,
 
-                            [{ css: 'background:rgba(255,51,0,1);', text: 'foo', code: { value: 49 } },
-                             { css: '',                             text: 'bar', code: {} } ])
+            [ { css: 'text-decoration: italic;background:rgba(255,51,0,1);',
+                italic: true,
+                bgColor: { name: 'red', bright: true },
+                text: 'foo' },
+
+              { css: 'color:rgba(204,0,0,0.5);',
+                color: { name: 'red', dim: true },
+                text: 'bar' } ])
     })
 
     it ('asWebInspectorConsoleLogArguments works', () => {

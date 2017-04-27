@@ -13,6 +13,13 @@ npm install ansicolor
 - Converting ANSI styles to a WebInspector-compatible output
 - A middleware for your platform-agnostic logging system
 
+## Recent updates / changelog
+
+- You can now change the default RGB values for CSS output
+- '.parse ()' now returns full span style data (ex. `{ italic: true, bgColor: { name: 'red', dim: true }, ...`)
+- '.strip ()' for removing ANSI codes
+- `.names` for run-time reflection
+
 ## Why another one?
 
 Other tools lack consistency, failing to solve the simple hierarchy problem:
@@ -110,14 +117,24 @@ color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001
 Parsing arbitrary strings styled with ANSI escape codes:
 
 ```javascript
-parsed = color.parse ('foo'.bgBrightRed + 'bar')       
+parsed = color.parse ('foo'.bgBrightRed.italic + 'bar'.red.dim)
 ```
 
 Will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists `.spans` property for obtaining the actual array:
 
 ```javascript
-parsed.spans // [{ css: 'background:rgba(255,51,0,1);', text: 'foo' },
-             //  { css: '',                             text: 'bar' } ])]
+assert.deepEqual (
+
+	[...parsed], parsed.spans,
+
+    [ { css: 'text-decoration: italic;background:rgba(255,51,0,1);',
+        italic: true,
+        bgColor: { name: 'red', bright: true },
+        text: 'foo' },
+
+      { css: 'color:rgba(204,0,0,0.5);',
+        color: { name: 'red', dim: true },
+        text: 'bar' } ])
 ```
 
 You can change the default RGB values:
