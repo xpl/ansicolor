@@ -39,14 +39,14 @@ Other tools provide output (rendering), but not input (parsing). Inspection of A
 ```javascript
 parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
-parsed.browserConsoleArguments /* = [
+parsed.asWebInspectorConsoleLogArguments /* = [
     "%cfoo%cbar%cbaz",
     "",
     "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
     "background:rgba(0,204,0,1);"
 ] */
 
-console.log (...parsed.browserConsoleArguments) // prints with colors in Chrome!
+console.log (...parsed.asWebInspectorConsoleLogArguments) // prints with colors in Chrome!
 ```
 
 ## Crash course
@@ -117,7 +117,7 @@ Will return a pseudo-array of styled spans (iterable with `for ... of` and conve
 Converting parsed array to argument list (acceptable by Chrome's `console.log`):
 
 ```javascript
-console.log (...parsed.browserConsoleArguments)
+console.log (...parsed.asWebInspectorConsoleLogArguments)
 ```
 
 Happy logging!

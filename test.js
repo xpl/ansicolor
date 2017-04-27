@@ -62,7 +62,9 @@ describe ('ansicolor', () => {
 
         const parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
-        assert.deepEqual (parsed.browserConsoleArguments, [
+        assert.deepEqual (parsed.asWebInspectorConsoleLogArguments,
+                          parsed.browserConsoleArguments /* LEGACY */, [
+                          
             "%cfoo%cbar%cbaz",
             "",
             "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",

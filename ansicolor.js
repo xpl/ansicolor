@@ -174,13 +174,15 @@ class Colors {
 
 /*  Outputs with WebInspector-compatible format     */
 
-    get browserConsoleArguments () {
+    get asWebInspectorConsoleLogArguments () {
 
         const spans = this.styledWithCSS.spans
 
         return [spans.map (p => ('%c' + p.text)).join (''),
              ...spans.map (p => p.css)]
     }
+
+    get browserConsoleArguments () { return this.asWebInspectorConsoleLogArguments } // LEGACY, DEPRECATED
 
 /*  Installs unsafe String extensions   */
 
