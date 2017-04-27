@@ -7,24 +7,6 @@ const
     colorCodes = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', '', 'default'],
     styleCodes = ['', 'bright', 'dim', 'italic', 'underline', '', '', 'inverse'],
 
-    brightCssColors = { black:   [0,     0,   0],
-                        red:     [255,  51,   0],
-                        green:   [51,  204,  51],
-                        yellow:  [255, 153,  51],
-                        blue:    [26,  140, 255],
-                        magenta: [255,   0, 255],
-                        cyan:    [0,   204, 255],
-                        white:   [255, 255, 255]    },
-
-    cssColors = {   black:   [0,     0,   0],
-                    red:     [204,   0,   0],
-                    green:   [0,   204,   0],
-                    yellow:  [204, 102,   0],
-                    blue:    [0,     0, 255],
-                    magenta: [204,   0, 204],
-                    cyan:    [0,   153, 255],
-                    white:   [255, 255, 255]    },
-
     types = {   0:  'style',
                 2:  'unstyle',
                 3:  'color',
@@ -56,7 +38,7 @@ class Color {
         const brightness = color.brightness || brightness_
 
         const prop = (color.background ? 'background:' : 'color:'),
-              rgb  = ((brightness === Code.bright) ? brightCssColors : cssColors)[color.name]
+              rgb  = ((brightness === Code.bright) ? Colors.rgbBright : Colors.rgb)[color.name]
 
         return rgb ? (prop + 'rgba(' + [...rgb, (brightness === Code.dim) ? 0.5 : 1].join (',') + ');') : ''
     }
@@ -230,6 +212,30 @@ class Colors {
         
         (this.names = this.names || []).push (method)
     }
+}
+
+Colors.rgb = {
+
+    black:   [0,     0,   0],
+    red:     [204,   0,   0],
+    green:   [0,   204,   0],
+    yellow:  [204, 102,   0],
+    blue:    [0,     0, 255],
+    magenta: [204,   0, 204],
+    cyan:    [0,   153, 255],
+    white:   [255, 255, 255]
+}
+
+Colors.rgbBright = {
+
+    black:   [0,     0,   0],
+    red:     [255,  51,   0],
+    green:   [51,  204,  51],
+    yellow:  [255, 153,  51],
+    blue:    [26,  140, 255],
+    magenta: [255,   0, 255],
+    cyan:    [0,   204, 255],
+    white:   [255, 255, 255]
 }
 
 colorCodes.forEach ((k, i) => {

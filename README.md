@@ -113,11 +113,39 @@ Parsing arbitrary strings styled with ANSI escape codes:
 parsed = color.parse ('foo'.bgBrightRed + 'bar')       
 ```
 
-Will return a pseudo-array of styled spans (iterable with `for ... of` and convertable to an array with spread operator):
+Will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists '.spans' property for obtaining the actual array:
 
 ```javascript
-[{ css: 'background:rgba(255,51,0,1);', text: 'foo' },
- { css: '',                             text: 'bar' } ])]
+parsed.spans // [{ css: 'background:rgba(255,51,0,1);', text: 'foo' },
+ 			 //	 { css: '',                             text: 'bar' } ])]
+```
+
+You can change the default RGB values:
+
+```javascript
+color.rgb = {
+
+    black:   [0,     0,   0],
+    red:     [204,   0,   0],
+    green:   [0,   204,   0],
+    yellow:  [204, 102,   0],
+    blue:    [0,     0, 255],
+    magenta: [204,   0, 204],
+    cyan:    [0,   153, 255],
+    white:   [255, 255, 255]
+}
+
+color.rgbBright = {
+
+    black:   [0,     0,   0],
+    red:     [255,  51,   0],
+    green:   [51,  204,  51],
+    yellow:  [255, 153,  51],
+    blue:    [26,  140, 255],
+    magenta: [255,   0, 255],
+    cyan:    [0,   204, 255],
+    white:   [255, 255, 255]
+}
 ```
 
 Converting parsed array to argument list (acceptable by Chrome's `console.log`):

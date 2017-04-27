@@ -53,12 +53,15 @@ describe ('ansicolor', () => {
 
     it ('basic parsing works', () => {
 
-        assert.deepEqual ([...color.parse ('foo'.bgBrightRed + 'bar')], [
-                            { css: 'background:rgba(255,51,0,1);', text: 'foo', code: { value: 49 } },
-                            { css: '',                             text: 'bar', code: {} } ])
+        const parsed = color.parse ('foo'.bgBrightRed + 'bar')
+
+        assert.deepEqual ([...parsed], parsed.spans,
+
+                            [{ css: 'background:rgba(255,51,0,1);', text: 'foo', code: { value: 49 } },
+                             { css: '',                             text: 'bar', code: {} } ])
     })
 
-    it ('browserConsoleArguments works', () => {
+    it ('asWebInspectorConsoleLogArguments works', () => {
 
         const parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
@@ -80,39 +83,48 @@ describe ('ansicolor', () => {
 
     it ('color names enumeration works', () => {
 
-        assert.deepEqual (color.names,
-                                [ 'black',
-                                  'bgBlack',
-                                  'bgBrightBlack',
-                                  'red',
-                                  'bgRed',
-                                  'bgBrightRed',
-                                  'green',
-                                  'bgGreen',
-                                  'bgBrightGreen',
-                                  'yellow',
-                                  'bgYellow',
-                                  'bgBrightYellow',
-                                  'blue',
-                                  'bgBlue',
-                                  'bgBrightBlue',
-                                  'magenta',
-                                  'bgMagenta',
-                                  'bgBrightMagenta',
-                                  'cyan',
-                                  'bgCyan',
-                                  'bgBrightCyan',
-                                  'white',
-                                  'bgWhite',
-                                  'bgBrightWhite',
-                                  'default',
-                                  'bgDefault',
-                                  'bgBrightDefault',
-                                  'bright',
-                                  'dim',
-                                  'italic',
-                                  'underline',
-                                  'inverse' ])
+        assert.deepEqual (color.names, [
+                                'black',
+                                'bgBlack',
+                                'bgBrightBlack',
+                                'red',
+                                'bgRed',
+                                'bgBrightRed',
+                                'green',
+                                'bgGreen',
+                                'bgBrightGreen',
+                                'yellow',
+                                'bgYellow',
+                                'bgBrightYellow',
+                                'blue',
+                                'bgBlue',
+                                'bgBrightBlue',
+                                'magenta',
+                                'bgMagenta',
+                                'bgBrightMagenta',
+                                'cyan',
+                                'bgCyan',
+                                'bgBrightCyan',
+                                'white',
+                                'bgWhite',
+                                'bgBrightWhite',
+                                'default',
+                                'bgDefault',
+                                'bgBrightDefault',
+                                'bright',
+                                'dim',
+                                'italic',
+                                'underline',
+                                'inverse'
+                            ])
+    })
+
+    it ('changing .rgb and .rgbBright works', () => {
+
+        color.rgb.red       = [255,0,0]
+        color.rgbBright.red = [255,127,0]
+
+        assert.deepEqual (color.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')
     })
 })
 
