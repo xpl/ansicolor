@@ -46,21 +46,11 @@ Nice!
 
 ### Cross-platform rendering
 
-Other tools provide output (rendering), but not input (parsing). Inspection of ANSI colors in arbitrary strings is essential when implementing cross-platform logging — that works not only in terminal, but in browsers too. Modern browsers support color logging with `console.log`, but it does not understand ANSI colors — having a proprietary CSS-based format instead. 
 
 **Ansicolor** solves that problem by converting color codes to argument lists that are understandable by browser's consoles:
 
 ```javascript
-parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
-parsed.asWebInspectorConsoleLogArguments /* = [
-    "%cfoo%cbar%cbaz",
-    "",
-    "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
-    "background:rgba(0,204,0,1);"
-] */
-
-console.log (...parsed.asWebInspectorConsoleLogArguments) // prints with colors in Chrome!
 ```
 
 ## Crash course
@@ -114,7 +104,7 @@ color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001
 
 ## Reading style information / CSS output
 
-Parsing arbitrary strings styled with ANSI escape codes:
+Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that works not only in terminal, but in browsers too. Here's how you do it:
 
 ```javascript
 parsed = color.parse ('foo'.bgBrightRed.italic + 'bar'.red.dim)
@@ -167,10 +157,25 @@ color.rgbBright = {
 
 ## WebInspector compatibility
 
-Converting parsed style data to an argument list acceptable by WebKit's `console.log`:
+Modern browsers support color logging with `console.log`, but it does not understand ANSI colors — having a proprietary CSS-based format instead. Ansicolor can help you with converting styled strings to argument lists acceptable by WebKit's `console.log`:
 
 ```javascript
-console.log (...parsed.asWebInspectorConsoleLogArguments)
+
+string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
+
+parsed = color.parse (string)
+
+console.log (...parsed.asWebInspectorConsoleLogArguments) // prints with colors in Chrome!
+```
+
+Here's what the format looks like:
+
+```
+parsed.asWebInspectorConsoleLogArguments // [ "%cfoo%cbar%cbaz",
+                                         //   "",
+                                         //   "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
+                                         //   "background:rgba(0,204,0,1);"
+                                         // ]
 ```
 
 Happy logging!
