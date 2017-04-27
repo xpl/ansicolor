@@ -117,7 +117,7 @@ Will return a pseudo-array of styled spans, iterable with `for ... of` and conve
 
 ```javascript
 parsed.spans // [{ css: 'background:rgba(255,51,0,1);', text: 'foo' },
- 			 //	 { css: '',                             text: 'bar' } ])]
+             //  { css: '',                             text: 'bar' } ])]
 ```
 
 You can change the default RGB values:
