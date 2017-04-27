@@ -103,8 +103,7 @@ color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001
 Parsing arbitrary strings styled with ANSI escape codes:
 
 ```javascript
-parsed = color.parse ('foo'.bgBrightRed + 'bar')
-                            
+parsed = color.parse ('foo'.bgBrightRed + 'bar')       
 ```
 
 Will return a pseudo-array of styled spans (iterable with `for ... of` and convertable to an array with spread operator):
