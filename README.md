@@ -153,10 +153,8 @@ color.rgbBright = {
 Modern browsers support color logging with `console.log`, but it does not understand ANSI colors — having a proprietary CSS-based format instead. Ansicolor can help you with converting styled strings to argument lists acceptable by WebKit's `console.log`:
 
 ```javascript
-
-string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
-
-parsed = color.parse (string)
+const string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
+const parsed = color.parse (string)
 
 console.log (...parsed.asWebInspectorConsoleLogArguments) // prints with colors in Chrome!
 ```
