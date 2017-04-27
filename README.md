@@ -161,7 +161,7 @@ console.log (...parsed.asWebInspectorConsoleLogArguments) // prints with colors 
 
 Here's what the format looks like:
 
-```
+```javascript
 parsed.asWebInspectorConsoleLogArguments // [ "%cfoo%cbar%cbaz",
                                          //   "",
                                          //   "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
