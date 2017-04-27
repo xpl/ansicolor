@@ -67,7 +67,7 @@ require ('ansicolor').nice
 console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
 ```
 
-All supported options:
+## Supported styles
 
 ```javascript
 'foreground colors'
@@ -86,13 +86,13 @@ All supported options:
     .bright.dim.italic.underline.inverse // italic may lack support on your platform
 ```
 
-You can get all the API method names that do string wrapping:
+You also can read these method names programmatically:
 
 ```javascript
 color.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
 ```
 
-Will remove all styles/colors from a string:
+## Removing ANSI styles from a string
 
 ```javascript
 color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
