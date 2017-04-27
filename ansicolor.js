@@ -23,7 +23,6 @@ const
                     style:         styleCodes,
                     unstyle:       styleCodes    }
 
-
 /*  ------------------------------------------------------------------------ */
 
 const clean = obj => {
