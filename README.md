@@ -1,4 +1,4 @@
-# ansicolor<sup>BETA</sup>
+# ansicolor
 
 A quality library for the ANSI color/style management.
 
