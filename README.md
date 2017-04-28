@@ -9,7 +9,7 @@ npm install ansicolor
 ## What for
 
 - String coloring with ANSI escape codes
-- Solves the style [hierarchy problem](https://github.com/xpl/ansicolor#why-another-one) (at which other similar tools fail)
+- Solves the [style hierarchy problem](#why-another-one) (at which other similar tools fail)
 - Parsing/removing ANSI style data from strings
 - Converting ANSI styles to a Chrome DevTools-compatible output ([interactive demo](https://xpl.github.io/ansicolor/))
 - A middleware for your platform-agnostic logging system
