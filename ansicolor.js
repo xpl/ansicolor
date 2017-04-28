@@ -67,7 +67,7 @@ class Color {
 
         return rgb
                 ? (prop + 'rgba(' + [...rgb, alpha].join (',') + ');')
-                : ((alpha < 1) ? ('opacity:' + alpha + ';') : '')
+                : ((!color.background && (alpha < 1)) ? 'color:rgba(0,0,0,0.5);' : '') // Chrome does not support 'opacity' property...
     }
 }
 

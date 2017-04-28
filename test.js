@@ -98,7 +98,7 @@ describe ('ansicolor', () => {
 
     it ('.dim works in CSS (there was a bug)', () => {
 
-        assert.deepEqual (color.parse ('foo'.dim).spans, [ { css: 'opacity:0.5;', color: { dim: true }, text: 'foo', code: { value: 22 } } ])
+        assert.deepEqual (color.parse ('foo'.dim).spans, [ { css: 'color:rgba(0,0,0,0.5);', color: { dim: true }, text: 'foo', code: { value: 22 } } ])
     })
 
     it ('stripping works', () => { // clauses were copypasted from strip-ansi
