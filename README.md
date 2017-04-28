@@ -33,7 +33,7 @@ console.log (('foo'.cyan + 'bar').red)
 
 ![pic](http://wtf.jpg.wtf/85/9b/1470626860-859b24350e22df74fd7497e9dc0d8d42.png)
 
-WTF, `bar` is not rendered red! It sucks. This is because ANSI codes are not hierarchical (like HTML), they're linear, and without some special magic nothing will work. **Ansicolor** does that magic for you:
+WTF, `bar` is not rendered red! It sucks. This is because ANSI codes are not hierarchical (as with XML/HTML), they're linear, and without some special magic nothing will work. **Ansicolor** does that magic for you:
 
 ```javascript
 require ('ansicolor').nice // .nice for unsafe String extensions
