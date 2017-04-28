@@ -1,6 +1,6 @@
 {
   "name": "ansicolor",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "The final solution to the ANSI color/style management. Works in browsers!",
   "main": "ansicolor.js",
   "scripts": {
