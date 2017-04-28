@@ -98,24 +98,25 @@ color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001
 Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that works not only in terminal, but in browsers too. Here's how you do it:
 
 ```javascript
-parsed = color.parse ('foo'.bgBrightRed.italic + 'bar'.red.dim)
+const parsed = color.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
 ```
 
 Will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists `.spans` property for obtaining the actual array:
 
 ```javascript
-assert.deepEqual (
+assert.deepEqual (parsed.spans /* or [...parsed] */,
 
-    [...parsed], parsed.spans,
-
-    [ { css: 'text-decoration: italic;background:rgba(255,51,0,1);',
+    [ { css: 'font-weight: bold;text-decoration: italic;background:rgba(255,51,0,1);',
         italic: true,
+        bold: true,
         bgColor: { name: 'red', bright: true },
-        text: 'foo' },
+        text: 'foo',
+        code: { value: 49 } },
 
       { css: 'color:rgba(204,0,0,0.5);',
         color: { name: 'red', dim: true },
-        text: 'bar' } ])
+        text: 'bar',
+        code: { value: 39 } } ])
 ```
 
 ## Custom color theme
