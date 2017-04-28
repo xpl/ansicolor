@@ -107,7 +107,7 @@ It will return a pseudo-array of styled spans, iterable with `for ... of` and co
 ```javascript
 assert.deepEqual (parsed.spans /* or [...parsed] */,
 
-    [ { css: 'font-weight: bold;text-decoration: italic;background:rgba(255,51,0,1);',
+    [ { css: 'font-weight: bold;font-style: italic;background:rgba(255,51,0,1);',
         italic: true,
         bold: true,
         color: { bright: true },
@@ -165,7 +165,7 @@ Here's what the format looks like:
 ```javascript
 parsed.asChromeConsoleLogArguments // [ "%cfoo%cbar%cbaz",
                                    //   "",
-                                   //   "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
+                                   //   "font-weight: bold;text-decoration: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
                                    //   "background:rgba(0,204,0,1);"
                                    // ]
 ```

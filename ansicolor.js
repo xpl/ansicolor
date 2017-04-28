@@ -158,8 +158,8 @@ class Colors {
                 const c = span.code
 
                 const inverted  = styles.has ('inverse'),
-                      underline = styles.has ('underline')   ? 'font-style: underline;' : '',                      
-                      italic    = styles.has ('italic')      ? 'text-decoration: italic;' : '',
+                      underline = styles.has ('underline')   ? 'text-decoration: underline;' : '',                      
+                      italic    = styles.has ('italic')      ? 'font-style: italic;' : '',
                       bold      = brightness === Code.bright ? 'font-weight: bold;' : ''
 
                 const foreColor = color.defaultBrightness (brightness)

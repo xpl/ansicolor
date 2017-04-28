@@ -60,15 +60,16 @@ describe ('ansicolor', () => {
 
     it ('basic parsing works', () => {
 
-        const parsed = color.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
+        const parsed = color.parse ('foo'.bgBrightRed.bright.italic.underline + 'bar'.red.dim)
 
         assert.deepEqual ([...parsed], parsed.spans)
 
         assert.deepEqual (parsed.spans,
 
-            [ { css: 'font-weight: bold;text-decoration: italic;background:rgba(255,51,0,1);',
+            [ { css: 'font-weight: bold;font-style: italic;text-decoration: underline;background:rgba(255,51,0,1);',
                 italic: true,
                 bold: true,
+                underline: true,
                 color: { bright: true },
                 bgColor: { name: 'red', bright: true },
                 text: 'foo',
@@ -90,7 +91,7 @@ describe ('ansicolor', () => {
 
                             "%cfoo%cbar%cbaz",
                             "",
-                            "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
+                            "font-weight: bold;text-decoration: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
                             "background:rgba(0,204,0,1);"
                         ])
     })
