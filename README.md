@@ -10,7 +10,7 @@ npm install ansicolor
 
 - String coloring with ANSI escape codes
 - Parsing/removing ANSI style data from strings
-- Converting ANSI styles to a WebInspector-compatible output
+- Converting ANSI styles to a WebInspector-compatible output ([interactive demo](https://xpl.github.io/ansicolor/))
 - A middleware for your platform-agnostic logging system
 
 ## Recent updates / changelog
@@ -169,6 +169,8 @@ parsed.asWebInspectorConsoleLogArguments // [ "%cfoo%cbar%cbaz",
                                          //   "background:rgba(0,204,0,1);"
                                          // ]
 ```
+
+You can even play with this feature online: [demo page](https://xpl.github.io/ansicolor/). Open the WebInspector and type expressions in the input box to see how it renders.
 
 Happy logging!
 
