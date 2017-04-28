@@ -111,13 +111,11 @@ assert.deepEqual (parsed.spans /* or [...parsed] */,
         bold: true,
         color: { bright: true },
         bgColor: { name: 'red', bright: true },
-        text: 'foo',
-        code: { value: 49 } },
+        text: 'foo' },
 
       { css: 'color:rgba(204,0,0,0.5);',
         color: { name: 'red', dim: true },
-        text: 'bar',
-        code: { value: 39 } } ])
+        text: 'bar' } ])
 ```
 
 ## Custom color theme
