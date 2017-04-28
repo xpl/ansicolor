@@ -12,7 +12,7 @@ npm install ansicolor
 - Solves the [style hierarchy problem](#why-another-one) (at which other similar tools fail)
 - Parsing/removing ANSI style data from strings
 - Converting ANSI styles to a Chrome DevTools-compatible output ([interactive demo](https://xpl.github.io/ansicolor/))
-- A middleware for your platform-agnostic logging system
+- A middleware for your [platform-agnostic logging system](https://github.com/xpl/ololog)
 
 ## Recent updates / changelog
 
@@ -174,4 +174,6 @@ You can even play with this feature online: [demo page](https://xpl.github.io/an
 
 Happy logging!
 
+## See also
 
+- [Ololog!](https://github.com/xpl/ololog)
