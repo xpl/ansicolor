@@ -32,6 +32,9 @@ describe ('ansicolor', () => {
 
     it ('nice mode works', () => {
 
+        color.nice // shouldn't mess up with repeated calls
+        color.nice
+
         same ('foo' + ('bar'.red.underline.bright + 'baz').green.underline + 'qux',
               'foo\u001b[4m\u001b[32m\u001b[22m\u001b[1m\u001b[4m\u001b[31mbar\u001b[32m\u001b[4m\u001b[22mbaz\u001b[39m\u001b[24mqux')
     })
