@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Ansicolor Test Page</title>
+		<title>Ansicolor Chrome Test Page</title>
 		<script>window.module = {}</script>
 		<script src="https://rawgit.com/xpl/ansicolor/master/ansicolor.js"></script>
 		<script>color = module.exports.nice</script>
@@ -13,7 +13,7 @@
 	</head>
 	
 	<body>
-		<span style="opacity:0.5;">// Open the console!</span>
+		<span style="opacity:0.5;">// Open the Chrome DevTools console!</span>
 		
 		<br><br>
 		
@@ -21,7 +21,7 @@
 
 		<br><br>
 
-		console.log (...color.parse (<input oninput="foo()" id="foo" style="width: 340px;" placeholder="type here, e.g. 'foo'.red" />).asWebInspectorConsoleLogArguments)
+		console.log (...color.parse (<input oninput="foo()" id="foo" style="width: 340px;" placeholder="type here, e.g. 'foo'.red" />).asChromeConsoleLogArguments)
 
 		<script>
 
@@ -29,7 +29,7 @@
 
 			function foo () {
 				try {
-					eval ('console.log (...color.parse (' + input.value + ').asWebInspectorConsoleLogArguments)')
+					eval ('console.log (...color.parse (' + input.value + ').asChromeConsoleLogArguments)')
 					input.className = ''
 				} catch (e) {
 					input.className = 'err'
