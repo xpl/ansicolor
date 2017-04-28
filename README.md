@@ -101,7 +101,7 @@ Inspection of ANSI styles in arbitrary strings is essential when implementing pl
 const parsed = color.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
 ```
 
-Will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists `.spans` property for obtaining the actual array:
+It will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists `.spans` property for obtaining the actual array directly:
 
 ```javascript
 assert.deepEqual (parsed.spans /* or [...parsed] */,
