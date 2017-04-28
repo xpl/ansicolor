@@ -66,6 +66,7 @@ describe ('ansicolor', () => {
             [ { css: 'font-weight: bold;text-decoration: italic;background:rgba(255,51,0,1);',
                 italic: true,
                 bold: true,
+                color: { bright: true },
                 bgColor: { name: 'red', bright: true },
                 text: 'foo',
                 code: { value: 49 } },
@@ -89,6 +90,11 @@ describe ('ansicolor', () => {
                             "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
                             "background:rgba(0,204,0,1);"
                         ])
+    })
+
+    it ('.dim works in CSS (there was a bug)', () => {
+
+        assert.deepEqual (color.parse ('foo'.dim).spans, [ { css: '', color: { dim: true }, text: 'foo', code: { value: 22 } } ])
     })
 
     it ('stripping works', () => { // clauses were copypasted from strip-ansi

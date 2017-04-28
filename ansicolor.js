@@ -27,7 +27,7 @@ const
 
 const clean = obj => {
                 for (const k in obj) { if (!obj[k]) { delete obj[k] } }
-                return obj
+                return (O.keys (obj).length === 0) ? undefined : obj
             }
 
 /*  ------------------------------------------------------------------------ */
@@ -46,10 +46,9 @@ class Color {
     }
 
     get clean () {
-        return this.name &&
-              (this.name !== 'default') && clean ({ name:   this.name,
-                                                    bright: this.brightness === Code.bright,
-                                                    dim:    this.brightness === Code.dim })
+        return clean ({ name:   this.name === 'default' ? '' : this.name,
+                        bright: this.brightness === Code.bright,
+                        dim:    this.brightness === Code.dim })
     }
 
     defaultBrightness (value) {
@@ -145,7 +144,7 @@ class Colors {
         return this.spans.reduce ((str, p) => str + p.text + (p.code ? p.code.str : ''), '')
     }
 
-    get styledWithCSS () {
+    get parsed () {
 
         var color      = new Color (),
             bgColor    = new Color (true /* background */),
@@ -154,9 +153,9 @@ class Colors {
 
         return O.assign (new Colors (), {
 
-            spans: this.spans.map (p => {
+            spans: this.spans.map (span => {
 
-                const c = p.code
+                const c = span.code
 
                 const inverted  = styles.has ('inverse'),
                       underline = styles.has ('underline')   ? 'font-style: underline;' : '',                      
@@ -166,12 +165,9 @@ class Colors {
                 const foreColor = color.defaultBrightness (brightness)
 
                 const styledSpan = O.assign (
-
-                    clean ({ bold: !!bold, color: foreColor.clean, bgColor: bgColor.clean }),
-                    
-                    { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },
-
-                    p)
+                                    { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },
+                                        clean ({ bold: !!bold, color: foreColor.clean, bgColor: bgColor.clean }),
+                                            span)
 
                 for (const k of styles) { styledSpan[k] = true }
 
@@ -181,7 +177,7 @@ class Colors {
                 
                 } else {
 
-                    switch (p.code.type) {
+                    switch (span.code.type) {
 
                         case 'color'        : color   = new Color (false, c.subtype);              break
                         case 'bgColor'      : bgColor = new Color (true,  c.subtype);              break
@@ -202,10 +198,10 @@ class Colors {
 
     get asWebInspectorConsoleLogArguments () {
 
-        const spans = this.styledWithCSS.spans
+        const spans = this.parsed.spans
 
-        return [spans.map (p => ('%c' + p.text)).join (''),
-             ...spans.map (p => p.css)]
+        return [spans.map (s => ('%c' + s.text)).join (''),
+             ...spans.map (s => s.css)]
     }
 
     get browserConsoleArguments () { return this.asWebInspectorConsoleLogArguments } // LEGACY, DEPRECATED
@@ -230,7 +226,7 @@ class Colors {
 /*  Parsing front-end   */
 
     static parse (s) {
-        return new Colors (s).styledWithCSS
+        return new Colors (s).parsed
     }
 
 /*  Stripping   */
