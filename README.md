@@ -10,7 +10,7 @@ npm install ansicolor
 
 - String coloring with ANSI escape codes
 - Parsing/removing ANSI style data from strings
-- Converting ANSI styles to a WebInspector-compatible output ([interactive demo](https://xpl.github.io/ansicolor/))
+- Converting ANSI styles to a Chrome DevTools-compatible output ([interactive demo](https://xpl.github.io/ansicolor/))
 - A middleware for your platform-agnostic logging system
 
 ## Recent updates / changelog
@@ -148,28 +148,28 @@ color.rgbBright = {
 }
 ```
 
-## WebInspector compatibility
+## Chrome DevTools compatibility
 
-Modern browsers support color logging with `console.log`, but it does not understand ANSI colors — having a proprietary CSS-based format instead. Ansicolor can help you with converting styled strings to argument lists acceptable by WebKit's `console.log`:
+Some browsers support color logging with `console.log`, but they don't understand ANSI colors, implementing a proprietary CSS-based format instead. _Ansicolor_ can help you with converting styled strings to argument lists acceptable by Chrome's `console.log`:
 
 ```javascript
 const string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
 const parsed = color.parse (string)
 
-console.log (...parsed.asWebInspectorConsoleLogArguments) // prints with colors in Chrome!
+console.log (...parsed.asChromeConsoleLogArguments) // prints with colors in Chrome!
 ```
 
 Here's what the format looks like:
 
 ```javascript
-parsed.asWebInspectorConsoleLogArguments // [ "%cfoo%cbar%cbaz",
-                                         //   "",
-                                         //   "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
-                                         //   "background:rgba(0,204,0,1);"
-                                         // ]
+parsed.asChromeConsoleLogArguments // [ "%cfoo%cbar%cbaz",
+                                   //   "",
+                                   //   "font-weight: bold;font-style: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);",
+                                   //   "background:rgba(0,204,0,1);"
+                                   // ]
 ```
 
-You can even play with this feature online: [demo page](https://xpl.github.io/ansicolor/). Open the WebInspector and type expressions in the input box to see how it renders.
+You can even play with this feature online: [demo page](https://xpl.github.io/ansicolor/). Open the DevTools console and type expressions in the input box to see how it renders.
 
 Happy logging!
 

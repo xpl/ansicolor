@@ -77,13 +77,13 @@ describe ('ansicolor', () => {
                 code: { value: 39 } } ])
     })
 
-    it ('asWebInspectorConsoleLogArguments works', () => {
+    it ('asChromeConsoleLogArguments works', () => {
 
         const parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
-        assert.deepEqual (parsed.asWebInspectorConsoleLogArguments, parsed.browserConsoleArguments) // legacy API
+        assert.deepEqual (parsed.asChromeConsoleLogArguments, parsed.browserConsoleArguments) // legacy API
 
-        assert.deepEqual (parsed.asWebInspectorConsoleLogArguments, [
+        assert.deepEqual (parsed.asChromeConsoleLogArguments, [
 
                             "%cfoo%cbar%cbaz",
                             "",

@@ -194,9 +194,9 @@ class Colors {
         })
     }
 
-/*  Outputs with WebInspector-compatible format     */
+/*  Outputs with Chrome DevTools-compatible format     */
 
-    get asWebInspectorConsoleLogArguments () {
+    get asChromeConsoleLogArguments () {
 
         const spans = this.parsed.spans
 
@@ -204,7 +204,7 @@ class Colors {
              ...spans.map (s => s.css)]
     }
 
-    get browserConsoleArguments () { return this.asWebInspectorConsoleLogArguments } // LEGACY, DEPRECATED
+    get browserConsoleArguments () /* LEGACY, DEPRECATED */ { return this.asChromeConsoleLogArguments }
 
 /*  Installs unsafe String extensions   */
 
