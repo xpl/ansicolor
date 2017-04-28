@@ -1,0 +1,34 @@
+<html>
+	<head>
+		<title>Ansicolor Test Page</title>
+		<script>window.module = {}</script>
+		<script src="https://rawgit.com/xpl/ansicolor/master/ansicolor.js"></script>
+		<script>color = module.exports.nice</script>
+		<style>
+			* { font-family: monospace; font-size: 22px; }
+			input.err { background: rgb(255,200,200); }
+		</style>
+	</head>
+	<code>
+		color = require ('ansicolor').nice
+
+		<br><br>
+
+		console.log (...color.parse (<input oninput="foo()" id="foo" style="width: 340px;" placeholder="type here, e.g. 'foo'.red" />).asWebInspectorConsoleLogArguments)
+	</code>
+
+	<script>
+
+		input = document.getElementById ('foo')
+
+		function foo () {
+			try {
+				eval ('console.log (...color.parse (' + input.value + ').asWebInspectorConsoleLogArguments)')
+				input.className = ''
+			} catch (e) {
+				input.className = 'err'
+			}
+		}
+	</script>
+	
+</html>
