@@ -63,7 +63,11 @@ class Color {
         const prop = (color.background ? 'background:' : 'color:'),
               rgb  = ((this.brightness === Code.bright) ? Colors.rgbBright : Colors.rgb)[color.name]
 
-        return rgb ? (prop + 'rgba(' + [...rgb, (this.brightness === Code.dim) ? 0.5 : 1].join (',') + ');') : ''
+        const alpha = (this.brightness === Code.dim) ? 0.5 : 1
+
+        return rgb
+                ? (prop + 'rgba(' + [...rgb, alpha].join (',') + ');')
+                : ((alpha < 1) ? ('opacity:' + alpha + ';') : '')
     }
 }
 
