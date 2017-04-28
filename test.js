@@ -76,11 +76,8 @@ describe ('ansicolor', () => {
 
         const parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
-        //assert.deepEqual (parsed.asWebInspectorConsoleLogArguments, parsed.browserConsoleArguments) // legacy API
+        assert.deepEqual (parsed.asWebInspectorConsoleLogArguments, parsed.browserConsoleArguments) // legacy API
 
-        console.log (parsed.asWebInspectorConsoleLogArguments)
-
-        return
         assert.deepEqual (parsed.asWebInspectorConsoleLogArguments, [
 
                             "%cfoo%cbar%cbaz",
