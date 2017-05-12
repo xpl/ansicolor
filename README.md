@@ -156,7 +156,7 @@ ansi.rgbBright = {
 }
 ```
 
-### Chrome DevTools compatibility
+## Chrome DevTools compatibility
 
 Some browsers support color logging with `console.log`, but they don't understand ANSI colors, implementing a proprietary CSS-based format instead. _Ansicolor_ can help you with converting styled strings to argument lists acceptable by Chrome's `console.log`:
 
