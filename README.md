@@ -48,6 +48,8 @@ Nice!
 
 ## Crash course
 
+### Safe mode (default)
+
 ```javascript
 ansi = require ('ansicolor')
 ```
@@ -58,13 +60,13 @@ console.log ('foo' + ansi.green (ansi.inverse (ansi.bgBrightCyan ('bar')) + 'baz
 console.log (ansi.underline.bright.green ('foo' + ansi.dim.red.bgBrightCyan ('bar'))) // method chaining
 ```
 
-### Nice mode
+### Nice mode (by request)
 
 ```javascript
 ansi = require ('ansicolor').nice
 ```
 
-Adds styling APIs directly to the `String` prototype, setting something like a DSL for infix-style string coloring. Convenient, but unsafe: avoid use in public modules, as it pollutes global objects, causing potential hard-to-debug compatibility issues.
+It adds styling APIs directly to the `String` prototype, setting something like a DSL for infix-style string coloring. Convenient, but unsafe: avoid use in public modules, as it pollutes global objects, causing potential hard-to-debug compatibility issues.
 
 ```javascript
 console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
