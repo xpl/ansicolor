@@ -16,6 +16,7 @@ npm install ansicolor
 
 ## Recent updates / changelog
 
+- You can now do `ansi.green.inverse.underline.italic ('hello')` (chainable API)
 - You can now change the default RGB values for CSS output
 - `.parse ()` now returns full span style data (ex. `{ italic: true, bgColor: { name: 'red', dim: true }, ...`)
 - `.strip ()` for removing ANSI codes
@@ -47,23 +48,29 @@ Nice!
 
 ## Crash course
 
-String wrapping (safe):
-
 ```javascript
-color = require ('ansicolor')
-
-console.log ('foo' + color.green (color.inverse (color.bgBrightCyan ('bar')) + 'baz') + 'qux')
+ansi = require ('ansicolor')
+```
+```javascript
+console.log ('foo' + ansi.green (ansi.inverse (ansi.bgBrightCyan ('bar')) + 'baz') + 'qux')
+```
+```javascript
+console.log (ansi.underline.bright.green ('foo' + ansi.dim.red.bgBrightCyan ('bar'))) // method chaining
 ```
 
-String wrapping (unsafe):
+### Nice mode
 
 ```javascript
-require ('ansicolor').nice
+ansi = require ('ansicolor').nice
+```
 
+Adds styling APIs directly to the `String` prototype, setting something like a DSL for infix-style string coloring. Convenient, but unsafe: avoid use in public modules, as it pollutes global objects, causing potential hard-to-debug compatibility issues.
+
+```javascript
 console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
 ```
 
-## Supported styles
+### Supported styles
 
 ```javascript
 'foreground colors'
@@ -85,13 +92,13 @@ console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
 You also can read these method names programmatically:
 
 ```javascript
-color.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
+ansi.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
 ```
 
 ## Removing ANSI styles from a string
 
 ```javascript
-color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
+ansi.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
 ```
 
 ## Reading style information / CSS output
@@ -99,7 +106,7 @@ color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001
 Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that works not only in terminal, but in browsers too. Here's how you do it:
 
 ```javascript
-const parsed = color.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
+const parsed = ansi.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
 ```
 
 It will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists `.spans` property for obtaining the actual array directly:
@@ -124,7 +131,7 @@ assert.deepEqual (parsed.spans /* or [...parsed] */,
 You can change the default RGB values:
 
 ```javascript
-color.rgb = {
+ansi.rgb = {
 
     black:   [0,     0,   0],
     red:     [204,   0,   0],
@@ -136,7 +143,7 @@ color.rgb = {
     white:   [255, 255, 255]
 }
 
-color.rgbBright = {
+ansi.rgbBright = {
 
     black:   [0,     0,   0],
     red:     [255,  51,   0],
@@ -155,7 +162,7 @@ Some browsers support color logging with `console.log`, but they don't understan
 
 ```javascript
 const string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
-const parsed = color.parse (string)
+const parsed = ansi.parse (string)
 
 console.log (...parsed.asChromeConsoleLogArguments) // prints with colors in Chrome!
 ```

@@ -3,7 +3,7 @@
 /*  ------------------------------------------------------------------------ */
 
 const assert = require ('assert'),
-      color  = require ('./ansicolor').nice
+      ansi   = require ('./ansicolor').nice
 
 /*  ------------------------------------------------------------------------ */
 
@@ -24,16 +24,22 @@ describe ('ansicolor', () => {
         assert.equal (a, b)
     }
 
-    it ('safe mode works', () => {
+    it ('works', () => {
 
-        same ('foo' + color.green (color.inverse (color.bgBrightCyan ('bar') + 'baz') + 'qux'),
+        same ('foo' + ansi.green (ansi.inverse (ansi.bgBrightCyan ('bar') + 'baz') + 'qux'),
               'foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m')
+    })
+
+    it ('chaining works', () => {
+
+        same (ansi.underline.bright.green ('chai' + ansi.dim.red.bgBrightCyan ('ning')),
+             '\u001b[4m\u001b[22m\u001b[1m\u001b[32mchai\u001b[22m\u001b[2m\u001b[31m\u001b[106mning\u001b[49m\u001b[32m\u001b[22m\u001b[1m\u001b[39m\u001b[22m\u001b[24m')
     })
 
     it ('nice mode works', () => {
 
-        color.nice // shouldn't mess up with repeated calls
-        color.nice
+        ansi.nice // shouldn't mess up with repeated calls
+        ansi.nice
 
         same ('foo' + ('bar'.red.underline.bright + 'baz').green.underline + 'qux',
               'foo\u001b[4m\u001b[32m\u001b[22m\u001b[1m\u001b[4m\u001b[31mbar\u001b[32m\u001b[4m\u001b[22mbaz\u001b[39m\u001b[24mqux')
@@ -60,7 +66,7 @@ describe ('ansicolor', () => {
 
     it ('basic parsing works', () => {
 
-        const parsed = color.parse ('foo'.bgBrightRed.bright.italic.underline + 'bar'.red.dim)
+        const parsed = ansi.parse ('foo'.bgBrightRed.bright.italic.underline + 'bar'.red.dim)
 
         assert.deepEqual ([...parsed], parsed.spans)
 
@@ -83,7 +89,7 @@ describe ('ansicolor', () => {
 
     it ('asChromeConsoleLogArguments works', () => {
 
-        const parsed = color.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
+        const parsed = ansi.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)
 
         assert.deepEqual (parsed.asChromeConsoleLogArguments, parsed.browserConsoleArguments) // legacy API
 
@@ -98,18 +104,18 @@ describe ('ansicolor', () => {
 
     it ('.dim works in CSS (there was a bug)', () => {
 
-        assert.deepEqual (color.parse ('foo'.dim).spans, [ { css: 'color:rgba(0,0,0,0.5);', color: { dim: true }, text: 'foo', code: { value: 22 } } ])
+        assert.deepEqual (ansi.parse ('foo'.dim).spans, [ { css: 'color:rgba(0,0,0,0.5);', color: { dim: true }, text: 'foo', code: { value: 22 } } ])
     })
 
     it ('stripping works', () => { // clauses were copypasted from strip-ansi
 
-        assert.equal ('foofoo', color.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m'))
-        assert.equal ('bar',    color.strip ('\x1b[0;33;49;3;9;4mbar\x1b[0m'))
+        assert.equal ('foofoo', ansi.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m'))
+        assert.equal ('bar',    ansi.strip ('\x1b[0;33;49;3;9;4mbar\x1b[0m'))
     })
 
     it ('color names enumeration works', () => {
 
-        assert.deepEqual (color.names, [
+        assert.deepEqual (ansi.names, [
                                 'black',
                                 'bgBlack',
                                 'bgBrightBlack',
@@ -147,10 +153,10 @@ describe ('ansicolor', () => {
 
     it ('changing .rgb and .rgbBright works', () => {
 
-        color.rgb.red       = [255,0,0]
-        color.rgbBright.red = [255,127,0]
+        ansi.rgb.red       = [255,0,0]
+        ansi.rgbBright.red = [255,127,0]
 
-        assert.deepEqual (color.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')
+        assert.deepEqual (ansi.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')
     })
 })
 
