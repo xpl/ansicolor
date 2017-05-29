@@ -258,15 +258,11 @@ class Colors {
         if (Colors.niceReady === undefined) {
             Colors.niceReady = true
 
-            const def = k => O.defineProperty (String.prototype, k, { get: function () { return Colors[k] (this) } })
-
-            colorCodes.forEach ((k, i) => {
+            Colors.names.forEach (k => {
                 if (!(k in String.prototype)) {
-                    [                   k,
-                     camel ('bg',       k),
-                     camel ('bgBright', k)].forEach (def) } })
-
-            styleCodes.forEach ((k, i) => { if (!(k in String.prototype)) def (k) })
+                    O.defineProperty (String.prototype, k, { get: function () { return Colors[k] (this) } })
+                }
+            })
         }
 
         return Colors
