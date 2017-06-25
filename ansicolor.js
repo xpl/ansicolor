@@ -123,7 +123,9 @@ const replaceAll = (str, a, b) => str.split (a).join (b)
 const denormalizeBrightness = s => s.replace (/(\u001b\[(1|2)m)/g, '\u001b[22m$1')
 const normalizeBrightness = s => s.replace (/\u001b\[22m(\u001b\[(1|2)m)/g, '$1')
 
-const wrap = (str, openCode, closeCode) => {
+const wrap = (x, openCode, closeCode) => {
+
+    const str = String (x)
 
     const open  = Code.str (openCode),
           close = Code.str (closeCode)

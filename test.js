@@ -158,6 +158,11 @@ describe ('ansicolor', () => {
 
         assert.deepEqual (ansi.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')
     })
+
+    it ('type coercion works', () => {
+
+        assert.equal (ansi.red (123), ansi.red ('123'))
+    })
 })
 
 
