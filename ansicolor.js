@@ -125,12 +125,13 @@ const normalizeBrightness = s => s.replace (/\u001b\[22m(\u001b\[(1|2)m)/g, '$1'
 
 const wrap = (x, openCode, closeCode) => {
 
-    const str = String (x)
-
     const open  = Code.str (openCode),
           close = Code.str (closeCode)
 
-    return denormalizeBrightness (open + replaceAll (normalizeBrightness (str), close, open) + close)
+    return String (x)
+                .split ('\n')
+                .map (line => denormalizeBrightness (open + replaceAll (normalizeBrightness (line), close, open) + close))
+                .join ('\n')
 }
 
 /*  ------------------------------------------------------------------------ */

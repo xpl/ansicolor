@@ -163,6 +163,11 @@ describe ('ansicolor', () => {
 
         assert.equal (ansi.red (123), ansi.red ('123'))
     })
+
+    it ('newline separation works', () => {
+
+        assert.equal ('foo\nbar\nbaz'.red, 'foo'.red + '\n' + 'bar'.red + '\n' + 'baz'.red)
+    })
 })
 
 
