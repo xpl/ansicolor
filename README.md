@@ -33,7 +33,7 @@ require ('colors') // a popular color utility
 console.log (('foo'.cyan + 'bar').red)
 ```
 
-![pic](http://wtf.jpg.wtf/85/9b/1470626860-859b24350e22df74fd7497e9dc0d8d42.png)
+![pic](http://cdn.jpg.wtf/futurico/85/9b/1470626860-859b24350e22df74fd7497e9dc0d8d42.png)
 
 WTF, `bar` is not rendered red! It sucks. This is because ANSI codes are not hierarchical (as with XML/HTML), they're linear, and without some special magic nothing will work. **Ansicolor** does that magic for you:
 
@@ -43,7 +43,7 @@ require ('ansicolor').nice // .nice for unsafe String extensions
 console.log (('foo'.cyan + 'bar').red)
 ```
 
-![pic](http://wtf.jpg.wtf/3c/61/1470626989-3c61b64d0690b0b413be367841650426.png)
+![pic](http://cdn.jpg.wtf/futurico/3c/61/1470626989-3c61b64d0690b0b413be367841650426.png)
 
 Nice!
 
