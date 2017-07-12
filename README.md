@@ -1,4 +1,6 @@
-# ansicolor [![Build Status](https://travis-ci.org/xpl/ansicolor.svg?branch=master)](https://travis-ci.org/xpl/ansicolor)
+# ansicolor
+
+[![Build Status](https://travis-ci.org/xpl/ansicolor.svg?branch=master)](https://travis-ci.org/xpl/ansicolor)
 
 A quality library for the ANSI color/style management.
 
