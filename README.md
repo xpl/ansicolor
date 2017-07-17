@@ -16,15 +16,6 @@ npm install ansicolor
 - Converting ANSI styles to a Chrome DevTools-compatible output ([interactive demo](https://xpl.github.io/ansicolor/))
 - A middleware for your [platform-agnostic logging system](https://github.com/xpl/ololog)
 
-## Recent updates / changelog
-
-- Each input line now gets wrapped separately, i.e. `'foo\nbar'.red === 'foo'.red + '\n' + 'bar'.red`
-- You can now do `ansi.green.inverse.underline.italic ('hello')` (chainable API)
-- You can now change the default RGB values for CSS output
-- `.parse ()` now returns full span style data (ex. `{ italic: true, bgColor: { name: 'red', dim: true }, ...`)
-- `.strip ()` for removing ANSI codes
-- `.names` for run-time reflection
-
 ## Why another one?
 
 Other tools lack consistency, failing to solve the simple hierarchy problem:
