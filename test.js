@@ -156,7 +156,7 @@ describe ('ansicolor', () => {
         ansi.rgb.red       = [255,0,0]
         ansi.rgbBright.red = [255,127,0]
 
-        assert.deepEqual (ansi.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')
+        assert.equal (ansi.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')
     })
 
     it ('type coercion works', () => {
@@ -167,6 +167,13 @@ describe ('ansicolor', () => {
     it ('newline separation works', () => {
 
         assert.equal ('foo\nbar\nbaz'.red, 'foo'.red + '\n' + 'bar'.red + '\n' + 'baz'.red)
+    })
+
+    it ('inverse works', () => {
+
+        same ('bgRed.inverse'.bgRed.inverse, '\u001b[7m\u001b[41mbgRed.inverse\u001b[49m\u001b[27m')
+
+        assert.equal (ansi.parse ('foo'.bgRed.inverse).spans[0].css, 'background:rgba(255,255,255,1);color:rgba(255,0,0,1);')
     })
 
     it ('.str works', () => {

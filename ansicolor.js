@@ -82,7 +82,7 @@ class Code {
        return types[Math.floor (this.value / 10)] }
 
     get subtype () {
-        return (subtypes[this.type] || [])[this.value % 10] }
+        return subtypes[this.type][this.value % 10] }
 
     get str () {
         return (this.value ? ('\u001b\[' + this.value + 'm') : '') }
@@ -189,7 +189,7 @@ class Colors {
     }
 
     get str () {
-        return this.spans.reduce ((str, p) => str + p.text + (p.code ? p.code.str : ''), '')
+        return this.spans.reduce ((str, p) => str + p.text + p.code.str, '')
     }
 
     get parsed () {
@@ -258,15 +258,11 @@ class Colors {
 
     static get nice () {
 
-        if (Colors.niceReady === undefined) {
-            Colors.niceReady = true
-
-            Colors.names.forEach (k => {
-                if (!(k in String.prototype)) {
-                    O.defineProperty (String.prototype, k, { get: function () { return Colors[k] (this) } })
-                }
-            })
-        }
+        Colors.names.forEach (k => {
+            if (!(k in String.prototype)) {
+                O.defineProperty (String.prototype, k, { get: function () { return Colors[k] (this) } })
+            }
+        })
 
         return Colors
     }
