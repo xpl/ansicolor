@@ -168,6 +168,12 @@ describe ('ansicolor', () => {
 
         assert.equal ('foo\nbar\nbaz'.red, 'foo'.red + '\n' + 'bar'.red + '\n' + 'baz'.red)
     })
+
+    it ('.str works', () => {
+
+        assert.equal (new ansi ('foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m').str,
+                                'foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m')
+    })
 })
 
 

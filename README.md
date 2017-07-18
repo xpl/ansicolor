@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/xpl/ansicolor.svg?branch=master)](https://travis-ci.org/xpl/ansicolor) [![npm](https://img.shields.io/npm/v/ansicolor.svg)](https://npmjs.com/package/ansicolor)
 
-A quality library for the ANSI color/style management.
+A quality library for the ANSI color/style management. Small, clean. No dependencies.
 
 ```bash
 npm install ansicolor
