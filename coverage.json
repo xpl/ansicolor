@@ -1,0 +1,18 @@
+{
+  "coverage": "54.54%",
+  "expectCount": 11,
+  "actualCount": 6,
+  "files": {
+    "ansicolor/ansicolor.js": {
+      "expectCount": 11,
+      "actualCount": 6,
+      "undocumentLines": [
+        253,
+        261,
+        201,
+        189,
+        197
+      ]
+    }
+  }
+}

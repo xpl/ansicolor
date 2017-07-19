@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">ansicolor/ansicolor.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/xpl/ansicolor.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/ansicolor/ansicolor.js~Colors.html">Colors</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">ansicolor/ansicolor.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">&quot;use strict&quot;;
+
+/*  ------------------------------------------------------------------------ */
+
+const O = Object
+
+/*  ------------------------------------------------------------------------ */
+
+const
+
+    colorCodes = [&apos;black&apos;, &apos;red&apos;, &apos;green&apos;, &apos;yellow&apos;, &apos;blue&apos;, &apos;magenta&apos;, &apos;cyan&apos;, &apos;white&apos;, &apos;&apos;, &apos;default&apos;],
+    styleCodes = [&apos;&apos;, &apos;bright&apos;, &apos;dim&apos;, &apos;italic&apos;, &apos;underline&apos;, &apos;&apos;, &apos;&apos;, &apos;inverse&apos;],
+
+    types = {   0:  &apos;style&apos;,
+                2:  &apos;unstyle&apos;,
+                3:  &apos;color&apos;,
+                4:  &apos;bgColor&apos;,
+                10: &apos;bgColorBright&apos; },
+
+    subtypes = {    color:         colorCodes,
+                    bgColor:       colorCodes,
+                    bgColorBright: colorCodes,
+                    style:         styleCodes,
+                    unstyle:       styleCodes    }
+
+/*  ------------------------------------------------------------------------ */
+
+const clean = obj =&gt; {
+                for (const k in obj) { if (!obj[k]) { delete obj[k] } }
+                return (O.keys (obj).length === 0) ? undefined : obj
+            }
+
+/*  ------------------------------------------------------------------------ */
+
+class Color {
+
+    constructor (background, name, brightness) {
+
+        this.background = background
+        this.name = name
+        this.brightness = brightness
+    }
+
+    get inverse () {
+        return new Color (!this.background, this.name || (this.background ? &apos;black&apos; : &apos;white&apos;), this.brightness)
+    }
+
+    get clean () {
+        return clean ({ name:   this.name === &apos;default&apos; ? &apos;&apos; : this.name,
+                        bright: this.brightness === Code.bright,
+                        dim:    this.brightness === Code.dim })
+    }
+
+    defaultBrightness (value) {
+
+        return new Color (this.background, this.name, this.brightness || value)
+    }
+
+    css (inverted) {
+
+        const color = inverted ? this.inverse : this
+
+        const prop = (color.background ? &apos;background:&apos; : &apos;color:&apos;),
+              rgb  = ((this.brightness === Code.bright) ? Colors.rgbBright : Colors.rgb)[color.name]
+
+        const alpha = (this.brightness === Code.dim) ? 0.5 : 1
+
+        return rgb
+                ? (prop + &apos;rgba(&apos; + [...rgb, alpha].join (&apos;,&apos;) + &apos;);&apos;)
+                : ((!color.background &amp;&amp; (alpha &lt; 1)) ? &apos;color:rgba(0,0,0,0.5);&apos; : &apos;&apos;) // Chrome does not support &apos;opacity&apos; property...
+    }
+}
+
+/*  ------------------------------------------------------------------------ */
+
+class Code {
+
+    constructor (n) {
+        if (n !== undefined) { this.value = Number (n) } }
+
+    get type () {
+       return types[Math.floor (this.value / 10)] }
+
+    get subtype () {
+        return subtypes[this.type][this.value % 10] }
+
+    get str () {
+        return (this.value ? (&apos;\u001b\[&apos; + this.value + &apos;m&apos;) : &apos;&apos;) }
+
+    static str (x) {
+        return new Code (x).str }
+
+    get isBrightness () {
+        return (this.value === Code.noBrightness) || (this.value === Code.bright) || (this.value === Code.dim) }
+}
+
+/*  ------------------------------------------------------------------------ */
+
+O.assign (Code, {
+
+    bright:       1,
+    dim:          2,
+    inverse:      7,
+    noBrightness: 22,
+    noItalic:     23,
+    noUnderline:  24,
+    noInverse:    27,
+    noColor:      39,
+    noBgColor:    49
+})
+
+/*  ------------------------------------------------------------------------ */
+
+const camel = (a, b) =&gt; a + b.charAt (0).toUpperCase () + b.slice (1)
+
+const replaceAll = (str, a, b) =&gt; str.split (a).join (b)
+
+/*  ANSI brightness codes do not overlap, e.g. &quot;{bright}{dim}foo&quot; will be rendered bright (not dim).
+    So we fix it by adding brightness canceling before each brightness code, so the former example gets
+    converted to &quot;{noBrightness}{bright}{noBrightness}{dim}foo&quot; &#x2013; this way it gets rendered as expected.
+ */
+
+const denormalizeBrightness = s =&gt; s.replace (/(\u001b\[(1|2)m)/g, &apos;\u001b[22m$1&apos;)
+const normalizeBrightness = s =&gt; s.replace (/\u001b\[22m(\u001b\[(1|2)m)/g, &apos;$1&apos;)
+
+const wrap = (x, openCode, closeCode) =&gt; {
+
+    const open  = Code.str (openCode),
+          close = Code.str (closeCode)
+
+    return String (x)
+                .split (&apos;\n&apos;)
+                .map (line =&gt; denormalizeBrightness (open + replaceAll (normalizeBrightness (line), close, open) + close))
+                .join (&apos;\n&apos;)
+}
+
+/*  ------------------------------------------------------------------------ */
+
+const stringWrappingMethods = (() =&gt; [
+
+        ...colorCodes.map ((k, i) =&gt; !k ? [] : [ // color methods
+
+            [k,                     30 + i,  Code.noColor],
+            [camel (&apos;bg&apos;, k),       40 + i,  Code.noBgColor],
+            [camel (&apos;bgBright&apos;, k), 100 + i, Code.noBgColor]
+        ]),
+
+        ...styleCodes.map ((k, i) =&gt; !k ? [] : [ // style methods
+
+            [k, i, ((k === &apos;bright&apos;) || (k === &apos;dim&apos;)) ? Code.noBrightness : (20 + i)]
+        ])
+    ]
+    .reduce ((a, b) =&gt; a.concat (b))
+    
+) ();
+
+/*  ------------------------------------------------------------------------ */
+
+const assignStringWrappingAPI = (target, wrapBefore = target) =&gt;
+
+    stringWrappingMethods.reduce ((memo, [k, open, close]) =&gt;
+                                        O.defineProperty (memo, k, {
+                                            get: () =&gt; assignStringWrappingAPI (str =&gt; wrapBefore (wrap (str, open, close)))
+                                        }),
+
+                                  target)
+
+/*  ------------------------------------------------------------------------ */
+
+/**
+ * Represents an ANSI-escaped string.
+ */
+class Colors {
+
+    /**
+     * @param {string} s a string containing ANSI escape codes.
+     */
+    constructor (s) {
+
+        if (s) {
+
+            const r = /\u001b\[(\d+)m/g
+
+            const spans = s.split (/\u001b\[\d+m/)
+            const codes = []
+
+            for (let match; match = r.exec (s);) codes.push (match[1])
+
+            this.spans = spans.map ((s, i) =&gt; ({ text: s, code: new Code (codes[i]) })) 
+        }
+
+        else {
+            this.spans = []
+        }
+    }
+
+    get str () {
+        return this.spans.reduce ((str, p) =&gt; str + p.text + p.code.str, &apos;&apos;)
+    }
+
+    get parsed () {
+
+        var color      = new Color (),
+            bgColor    = new Color (true /* background */),
+            brightness = undefined,
+            styles     = new Set ()
+
+        return O.assign (new Colors (), {
+
+            spans: this.spans.map (span =&gt; {
+
+                const c = span.code
+
+                const inverted  = styles.has (&apos;inverse&apos;),
+                      underline = styles.has (&apos;underline&apos;)   ? &apos;text-decoration: underline;&apos; : &apos;&apos;,                      
+                      italic    = styles.has (&apos;italic&apos;)      ? &apos;font-style: italic;&apos; : &apos;&apos;,
+                      bold      = brightness === Code.bright ? &apos;font-weight: bold;&apos; : &apos;&apos;
+
+                const foreColor = color.defaultBrightness (brightness)
+
+                const styledSpan = O.assign (
+                                    { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },
+                                        clean ({ bold: !!bold, color: foreColor.clean, bgColor: bgColor.clean }),
+                                            span)
+
+                for (const k of styles) { styledSpan[k] = true }
+
+                if (c.isBrightness) {
+
+                    brightness = c.value
+                
+                } else {
+
+                    switch (span.code.type) {
+
+                        case &apos;color&apos;        : color   = new Color (false, c.subtype);              break
+                        case &apos;bgColor&apos;      : bgColor = new Color (true,  c.subtype);              break
+                        case &apos;bgColorBright&apos;: bgColor = new Color (true,  c.subtype, Code.bright); break
+
+                        case &apos;style&apos;  : styles.add    (c.subtype); break
+                        case &apos;unstyle&apos;: styles.delete (c.subtype); break
+                    }
+                }
+
+                return styledSpan
+
+            }).filter (s =&gt; s.text.length &gt; 0)
+        })
+    }
+
+/*  Outputs with Chrome DevTools-compatible format     */
+
+    get asChromeConsoleLogArguments () {
+
+        const spans = this.parsed.spans
+
+        return [spans.map (s =&gt; (&apos;%c&apos; + s.text)).join (&apos;&apos;),
+             ...spans.map (s =&gt; s.css)]
+    }
+
+    get browserConsoleArguments () /* LEGACY, DEPRECATED */ { return this.asChromeConsoleLogArguments }
+
+    /**
+     * @desc installs String prototype extensions
+     * @example
+     * require (&apos;ansicolor&apos;).nice
+     * console.log (&apos;foo&apos;.bright.red)
+     */
+    static get nice () {
+
+        Colors.names.forEach (k =&gt; {
+            if (!(k in String.prototype)) {
+                O.defineProperty (String.prototype, k, { get: function () { return Colors[k] (this) } })
+            }
+        })
+
+        return Colors
+    }
+
+    /**
+     * @desc parses a string containing ANSI escape codes
+     * @return {Colors} parsed representation.
+     */
+    static parse (s) {
+        return new Colors (s).parsed
+    }
+
+    /**
+     * @desc strips ANSI codes from a string
+     * @param {string} s a string containing ANSI escape codes.
+     * @return {string} clean string.
+     */
+    static strip (s) {
+        return s.replace (/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=&gt;&lt;]/g, &apos;&apos;) // hope V8 caches the regexp
+    }
+
+    /**
+     * @example
+     * const spans = [...ansi.parse (&apos;\u001b[7m\u001b[7mfoo\u001b[7mbar\u001b[27m&apos;)]
+     */
+    [Symbol.iterator] () {
+        return this.spans[Symbol.iterator] ()
+    }
+}
+
+/*  ------------------------------------------------------------------------ */
+
+assignStringWrappingAPI (Colors, str =&gt; str)
+
+/*  ------------------------------------------------------------------------ */
+
+Colors.names = stringWrappingMethods.map (([k]) =&gt; k)
+
+/*  ------------------------------------------------------------------------ */
+
+Colors.rgb = {
+
+    black:   [0,     0,   0],
+    red:     [204,   0,   0],
+    green:   [0,   204,   0],
+    yellow:  [204, 102,   0],
+    blue:    [0,     0, 255],
+    magenta: [204,   0, 204],
+    cyan:    [0,   153, 255],
+    white:   [255, 255, 255]
+}
+
+Colors.rgbBright = {
+
+    black:   [0,     0,   0],
+    red:     [255,  51,   0],
+    green:   [51,  204,  51],
+    yellow:  [255, 153,  51],
+    blue:    [26,  140, 255],
+    magenta: [255,   0, 255],
+    cyan:    [0,   204, 255],
+    white:   [255, 255, 255]
+}
+
+/*  ------------------------------------------------------------------------ */
+
+module.exports = Colors
+
+/*  ------------------------------------------------------------------------ */
+
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.5.2)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

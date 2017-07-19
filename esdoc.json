@@ -1,7 +1,7 @@
 {
    "source": "./",
    "includes": ["^ansicolor.js$"],
-   "destination": "./doc",
+   "destination": "./",
    "plugins": [{"name": "esdoc-node"}],
    "test": {
       "type": "mocha",

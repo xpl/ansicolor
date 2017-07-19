@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">ansicolor/test.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/xpl/ansicolor.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/ansicolor/ansicolor.js~Colors.html">Colors</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">ansicolor/test.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">&quot;use strict&quot;;
+
+/*  ------------------------------------------------------------------------ */
+
+const assert = require (&apos;assert&apos;),
+      ansi   = require (&apos;./ansicolor&apos;).nice
+
+/*  ------------------------------------------------------------------------ */
+
+describe (&apos;ansicolor&apos;, () =&gt; {
+
+    const dbg = s =&gt; s.replace (/\u001b\[(\d+)m/g, &apos;\u001b[36m{$1}\u001b[39m&apos;)
+
+    const same = (a, b) =&gt; {
+
+        console.log (&apos;\n&apos;)
+
+        console.log (&apos;expected:&apos;, b)
+        console.log (&apos;         &apos;, dbg (b), &apos;\n&apos;)
+
+        console.log (&apos;actual  :&apos;, a)
+        console.log (&apos;         &apos;, dbg (a), &apos;\n&apos;)
+
+        assert.equal (a, b)
+    }
+
+    it (&apos;works&apos;, () =&gt; {
+
+        same (&apos;foo&apos; + ansi.green (ansi.inverse (ansi.bgBrightCyan (&apos;bar&apos;) + &apos;baz&apos;) + &apos;qux&apos;),
+              &apos;foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m&apos;)
+    })
+
+    it (&apos;chaining works&apos;, () =&gt; {
+
+        same (ansi.underline.bright.green (&apos;chai&apos; + ansi.dim.red.bgBrightCyan (&apos;ning&apos;)),
+             &apos;\u001b[4m\u001b[22m\u001b[1m\u001b[32mchai\u001b[22m\u001b[2m\u001b[31m\u001b[106mning\u001b[49m\u001b[32m\u001b[22m\u001b[1m\u001b[39m\u001b[22m\u001b[24m&apos;)
+    })
+
+    it (&apos;nice mode works&apos;, () =&gt; {
+
+        ansi.nice // shouldn&apos;t mess up with repeated calls
+        ansi.nice
+
+        same (&apos;foo&apos; + (&apos;bar&apos;.red.underline.bright + &apos;baz&apos;).green.underline + &apos;qux&apos;,
+              &apos;foo\u001b[4m\u001b[32m\u001b[22m\u001b[1m\u001b[4m\u001b[31mbar\u001b[32m\u001b[4m\u001b[22mbaz\u001b[39m\u001b[24mqux&apos;)
+    })
+
+    it (&apos;brightness hierarchy works&apos;, () =&gt; {
+
+        same ((&apos;foo&apos; + &apos;bar&apos;.dim + &apos;baz&apos;).bright, &apos;\u001b[22m\u001b[1mfoo\u001b[22m\u001b[2mbar\u001b[22m\u001b[1mbaz\u001b[22m&apos;)
+    })
+
+    it (&apos;hierarchy works&apos;, () =&gt; {
+
+        same (((&apos;red&apos;.red + &apos;green&apos;).green + &apos;blue&apos;).blue, &apos;\u001b[34m\u001b[32m\u001b[31mred\u001b[32mgreen\u001b[34mblue\u001b[39m&apos;)
+
+        same ((&apos;foo&apos;.cyan         + &apos;bar&apos;).red,         &apos;\u001b[31m\u001b[36mfoo\u001b[31mbar\u001b[39m&apos;)
+        same ((&apos;foo&apos;.bgCyan       + &apos;bar&apos;).bgRed,       &apos;\u001b[41m\u001b[46mfoo\u001b[41mbar\u001b[49m&apos;)
+        same ((&apos;foo&apos;.bgBrightCyan + &apos;bar&apos;).bgBrightRed, &apos;\u001b[101m\u001b[106mfoo\u001b[101mbar\u001b[49m&apos;)
+        same ((&apos;foo&apos;.underline    + &apos;bar&apos;).underline,   &apos;\u001b[4m\u001b[4mfoo\u001b[4mbar\u001b[24m&apos;)
+
+        same ((&apos;foo&apos;.bright  + &apos;bar&apos;).bright,   &apos;\u001b[22m\u001b[1m\u001b[22m\u001b[1mfoo\u001b[22m\u001b[1mbar\u001b[22m&apos;)
+        same ((&apos;foo&apos;.dim     + &apos;bar&apos;).dim,      &apos;\u001b[22m\u001b[2m\u001b[22m\u001b[2mfoo\u001b[22m\u001b[2mbar\u001b[22m&apos;)
+        same ((&apos;foo&apos;.inverse + &apos;bar&apos;).inverse,  &apos;\u001b[7m\u001b[7mfoo\u001b[7mbar\u001b[27m&apos;)
+    })
+
+    it (&apos;basic parsing works&apos;, () =&gt; {
+
+        const parsed = ansi.parse (&apos;foo&apos;.bgBrightRed.bright.italic.underline + &apos;bar&apos;.red.dim)
+
+        assert.deepEqual ([...parsed], parsed.spans)
+
+        assert.deepEqual (parsed.spans,
+
+            [ { css: &apos;font-weight: bold;font-style: italic;text-decoration: underline;background:rgba(255,51,0,1);&apos;,
+                italic: true,
+                bold: true,
+                underline: true,
+                color: { bright: true },
+                bgColor: { name: &apos;red&apos;, bright: true },
+                text: &apos;foo&apos;,
+                code: { value: 49 } },
+
+              { css: &apos;color:rgba(204,0,0,0.5);&apos;,
+                color: { name: &apos;red&apos;, dim: true },
+                text: &apos;bar&apos;,
+                code: { value: 39 } } ])
+    })
+
+    it (&apos;asChromeConsoleLogArguments works&apos;, () =&gt; {
+
+        const parsed = ansi.parse (&apos;foo&apos; + (&apos;bar&apos;.red.underline.bright.inverse + &apos;baz&apos;).bgGreen)
+
+        assert.deepEqual (parsed.asChromeConsoleLogArguments, parsed.browserConsoleArguments) // legacy API
+
+        assert.deepEqual (parsed.asChromeConsoleLogArguments, [
+
+                            &quot;%cfoo%cbar%cbaz&quot;,
+                            &quot;&quot;,
+                            &quot;font-weight: bold;text-decoration: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);&quot;,
+                            &quot;background:rgba(0,204,0,1);&quot;
+                        ])
+    })
+
+    it (&apos;.dim works in CSS (there was a bug)&apos;, () =&gt; {
+
+        assert.deepEqual (ansi.parse (&apos;foo&apos;.dim).spans, [ { css: &apos;color:rgba(0,0,0,0.5);&apos;, color: { dim: true }, text: &apos;foo&apos;, code: { value: 22 } } ])
+    })
+
+    it (&apos;stripping works&apos;, () =&gt; { // clauses were copypasted from strip-ansi
+
+        assert.equal (&apos;foofoo&apos;, ansi.strip (&apos;\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m&apos;))
+        assert.equal (&apos;bar&apos;,    ansi.strip (&apos;\x1b[0;33;49;3;9;4mbar\x1b[0m&apos;))
+    })
+
+    it (&apos;color names enumeration works&apos;, () =&gt; {
+
+        assert.deepEqual (ansi.names, [
+                                &apos;black&apos;,
+                                &apos;bgBlack&apos;,
+                                &apos;bgBrightBlack&apos;,
+                                &apos;red&apos;,
+                                &apos;bgRed&apos;,
+                                &apos;bgBrightRed&apos;,
+                                &apos;green&apos;,
+                                &apos;bgGreen&apos;,
+                                &apos;bgBrightGreen&apos;,
+                                &apos;yellow&apos;,
+                                &apos;bgYellow&apos;,
+                                &apos;bgBrightYellow&apos;,
+                                &apos;blue&apos;,
+                                &apos;bgBlue&apos;,
+                                &apos;bgBrightBlue&apos;,
+                                &apos;magenta&apos;,
+                                &apos;bgMagenta&apos;,
+                                &apos;bgBrightMagenta&apos;,
+                                &apos;cyan&apos;,
+                                &apos;bgCyan&apos;,
+                                &apos;bgBrightCyan&apos;,
+                                &apos;white&apos;,
+                                &apos;bgWhite&apos;,
+                                &apos;bgBrightWhite&apos;,
+                                &apos;default&apos;,
+                                &apos;bgDefault&apos;,
+                                &apos;bgBrightDefault&apos;,
+                                &apos;bright&apos;,
+                                &apos;dim&apos;,
+                                &apos;italic&apos;,
+                                &apos;underline&apos;,
+                                &apos;inverse&apos;
+                            ])
+    })
+
+    it (&apos;changing .rgb and .rgbBright works&apos;, () =&gt; {
+
+        ansi.rgb.red       = [255,0,0]
+        ansi.rgbBright.red = [255,127,0]
+
+        assert.equal (ansi.parse (&apos;foo&apos;.red.bgBrightRed).spans[0].css, &apos;color:rgba(255,0,0,1);background:rgba(255,127,0,1);&apos;)
+    })
+
+    it (&apos;type coercion works&apos;, () =&gt; {
+
+        assert.equal (ansi.red (123), ansi.red (&apos;123&apos;))
+    })
+
+    it (&apos;newline separation works&apos;, () =&gt; {
+
+        assert.equal (&apos;foo\nbar\nbaz&apos;.red, &apos;foo&apos;.red + &apos;\n&apos; + &apos;bar&apos;.red + &apos;\n&apos; + &apos;baz&apos;.red)
+    })
+
+    it (&apos;inverse works&apos;, () =&gt; {
+
+        same (&apos;bgRed.inverse&apos;.bgRed.inverse, &apos;\u001b[7m\u001b[41mbgRed.inverse\u001b[49m\u001b[27m&apos;)
+
+        assert.equal (ansi.parse (&apos;foo&apos;.bgRed.inverse).spans[0].css, &apos;background:rgba(255,255,255,1);color:rgba(255,0,0,1);&apos;)
+    })
+
+    it (&apos;.str works&apos;, () =&gt; {
+
+        assert.equal (new ansi (&apos;foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m&apos;).str,
+                                &apos;foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m&apos;)
+    })
+})
+
+
+
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.5.2)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

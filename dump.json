@@ -1,0 +1,1982 @@
+[
+  {
+    "__docId__": 0,
+    "kind": "file",
+    "name": "ansicolor/ansicolor.js",
+    "content": "\"use strict\";\n\n/*  ------------------------------------------------------------------------ */\n\nconst O = Object\n\n/*  ------------------------------------------------------------------------ */\n\nconst\n\n    colorCodes = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', '', 'default'],\n    styleCodes = ['', 'bright', 'dim', 'italic', 'underline', '', '', 'inverse'],\n\n    types = {   0:  'style',\n                2:  'unstyle',\n                3:  'color',\n                4:  'bgColor',\n                10: 'bgColorBright' },\n\n    subtypes = {    color:         colorCodes,\n                    bgColor:       colorCodes,\n                    bgColorBright: colorCodes,\n                    style:         styleCodes,\n                    unstyle:       styleCodes    }\n\n/*  ------------------------------------------------------------------------ */\n\nconst clean = obj => {\n                for (const k in obj) { if (!obj[k]) { delete obj[k] } }\n                return (O.keys (obj).length === 0) ? undefined : obj\n            }\n\n/*  ------------------------------------------------------------------------ */\n\nclass Color {\n\n    constructor (background, name, brightness) {\n\n        this.background = background\n        this.name = name\n        this.brightness = brightness\n    }\n\n    get inverse () {\n        return new Color (!this.background, this.name || (this.background ? 'black' : 'white'), this.brightness)\n    }\n\n    get clean () {\n        return clean ({ name:   this.name === 'default' ? '' : this.name,\n                        bright: this.brightness === Code.bright,\n                        dim:    this.brightness === Code.dim })\n    }\n\n    defaultBrightness (value) {\n\n        return new Color (this.background, this.name, this.brightness || value)\n    }\n\n    css (inverted) {\n\n        const color = inverted ? this.inverse : this\n\n        const prop = (color.background ? 'background:' : 'color:'),\n              rgb  = ((this.brightness === Code.bright) ? Colors.rgbBright : Colors.rgb)[color.name]\n\n        const alpha = (this.brightness === Code.dim) ? 0.5 : 1\n\n        return rgb\n                ? (prop + 'rgba(' + [...rgb, alpha].join (',') + ');')\n                : ((!color.background && (alpha < 1)) ? 'color:rgba(0,0,0,0.5);' : '') // Chrome does not support 'opacity' property...\n    }\n}\n\n/*  ------------------------------------------------------------------------ */\n\nclass Code {\n\n    constructor (n) {\n        if (n !== undefined) { this.value = Number (n) } }\n\n    get type () {\n       return types[Math.floor (this.value / 10)] }\n\n    get subtype () {\n        return subtypes[this.type][this.value % 10] }\n\n    get str () {\n        return (this.value ? ('\\u001b\\[' + this.value + 'm') : '') }\n\n    static str (x) {\n        return new Code (x).str }\n\n    get isBrightness () {\n        return (this.value === Code.noBrightness) || (this.value === Code.bright) || (this.value === Code.dim) }\n}\n\n/*  ------------------------------------------------------------------------ */\n\nO.assign (Code, {\n\n    bright:       1,\n    dim:          2,\n    inverse:      7,\n    noBrightness: 22,\n    noItalic:     23,\n    noUnderline:  24,\n    noInverse:    27,\n    noColor:      39,\n    noBgColor:    49\n})\n\n/*  ------------------------------------------------------------------------ */\n\nconst camel = (a, b) => a + b.charAt (0).toUpperCase () + b.slice (1)\n\nconst replaceAll = (str, a, b) => str.split (a).join (b)\n\n/*  ANSI brightness codes do not overlap, e.g. \"{bright}{dim}foo\" will be rendered bright (not dim).\n    So we fix it by adding brightness canceling before each brightness code, so the former example gets\n    converted to \"{noBrightness}{bright}{noBrightness}{dim}foo\" – this way it gets rendered as expected.\n */\n\nconst denormalizeBrightness = s => s.replace (/(\\u001b\\[(1|2)m)/g, '\\u001b[22m$1')\nconst normalizeBrightness = s => s.replace (/\\u001b\\[22m(\\u001b\\[(1|2)m)/g, '$1')\n\nconst wrap = (x, openCode, closeCode) => {\n\n    const open  = Code.str (openCode),\n          close = Code.str (closeCode)\n\n    return String (x)\n                .split ('\\n')\n                .map (line => denormalizeBrightness (open + replaceAll (normalizeBrightness (line), close, open) + close))\n                .join ('\\n')\n}\n\n/*  ------------------------------------------------------------------------ */\n\nconst stringWrappingMethods = (() => [\n\n        ...colorCodes.map ((k, i) => !k ? [] : [ // color methods\n\n            [k,                     30 + i,  Code.noColor],\n            [camel ('bg', k),       40 + i,  Code.noBgColor],\n            [camel ('bgBright', k), 100 + i, Code.noBgColor]\n        ]),\n\n        ...styleCodes.map ((k, i) => !k ? [] : [ // style methods\n\n            [k, i, ((k === 'bright') || (k === 'dim')) ? Code.noBrightness : (20 + i)]\n        ])\n    ]\n    .reduce ((a, b) => a.concat (b))\n    \n) ();\n\n/*  ------------------------------------------------------------------------ */\n\nconst assignStringWrappingAPI = (target, wrapBefore = target) =>\n\n    stringWrappingMethods.reduce ((memo, [k, open, close]) =>\n                                        O.defineProperty (memo, k, {\n                                            get: () => assignStringWrappingAPI (str => wrapBefore (wrap (str, open, close)))\n                                        }),\n\n                                  target)\n\n/*  ------------------------------------------------------------------------ */\n\n/**\n * Represents an ANSI-escaped string.\n */\nclass Colors {\n\n    /**\n     * @param {string} s a string containing ANSI escape codes.\n     */\n    constructor (s) {\n\n        if (s) {\n\n            const r = /\\u001b\\[(\\d+)m/g\n\n            const spans = s.split (/\\u001b\\[\\d+m/)\n            const codes = []\n\n            for (let match; match = r.exec (s);) codes.push (match[1])\n\n            this.spans = spans.map ((s, i) => ({ text: s, code: new Code (codes[i]) })) \n        }\n\n        else {\n            this.spans = []\n        }\n    }\n\n    get str () {\n        return this.spans.reduce ((str, p) => str + p.text + p.code.str, '')\n    }\n\n    get parsed () {\n\n        var color      = new Color (),\n            bgColor    = new Color (true /* background */),\n            brightness = undefined,\n            styles     = new Set ()\n\n        return O.assign (new Colors (), {\n\n            spans: this.spans.map (span => {\n\n                const c = span.code\n\n                const inverted  = styles.has ('inverse'),\n                      underline = styles.has ('underline')   ? 'text-decoration: underline;' : '',                      \n                      italic    = styles.has ('italic')      ? 'font-style: italic;' : '',\n                      bold      = brightness === Code.bright ? 'font-weight: bold;' : ''\n\n                const foreColor = color.defaultBrightness (brightness)\n\n                const styledSpan = O.assign (\n                                    { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },\n                                        clean ({ bold: !!bold, color: foreColor.clean, bgColor: bgColor.clean }),\n                                            span)\n\n                for (const k of styles) { styledSpan[k] = true }\n\n                if (c.isBrightness) {\n\n                    brightness = c.value\n                \n                } else {\n\n                    switch (span.code.type) {\n\n                        case 'color'        : color   = new Color (false, c.subtype);              break\n                        case 'bgColor'      : bgColor = new Color (true,  c.subtype);              break\n                        case 'bgColorBright': bgColor = new Color (true,  c.subtype, Code.bright); break\n\n                        case 'style'  : styles.add    (c.subtype); break\n                        case 'unstyle': styles.delete (c.subtype); break\n                    }\n                }\n\n                return styledSpan\n\n            }).filter (s => s.text.length > 0)\n        })\n    }\n\n/*  Outputs with Chrome DevTools-compatible format     */\n\n    get asChromeConsoleLogArguments () {\n\n        const spans = this.parsed.spans\n\n        return [spans.map (s => ('%c' + s.text)).join (''),\n             ...spans.map (s => s.css)]\n    }\n\n    get browserConsoleArguments () /* LEGACY, DEPRECATED */ { return this.asChromeConsoleLogArguments }\n\n    /**\n     * @desc installs String prototype extensions\n     * @example\n     * require ('ansicolor').nice\n     * console.log ('foo'.bright.red)\n     */\n    static get nice () {\n\n        Colors.names.forEach (k => {\n            if (!(k in String.prototype)) {\n                O.defineProperty (String.prototype, k, { get: function () { return Colors[k] (this) } })\n            }\n        })\n\n        return Colors\n    }\n\n    /**\n     * @desc parses a string containing ANSI escape codes\n     * @return {Colors} parsed representation.\n     */\n    static parse (s) {\n        return new Colors (s).parsed\n    }\n\n    /**\n     * @desc strips ANSI codes from a string\n     * @param {string} s a string containing ANSI escape codes.\n     * @return {string} clean string.\n     */\n    static strip (s) {\n        return s.replace (/[\\u001b\\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g, '') // hope V8 caches the regexp\n    }\n\n    /**\n     * @example\n     * const spans = [...ansi.parse ('\\u001b[7m\\u001b[7mfoo\\u001b[7mbar\\u001b[27m')]\n     */\n    [Symbol.iterator] () {\n        return this.spans[Symbol.iterator] ()\n    }\n}\n\n/*  ------------------------------------------------------------------------ */\n\nassignStringWrappingAPI (Colors, str => str)\n\n/*  ------------------------------------------------------------------------ */\n\nColors.names = stringWrappingMethods.map (([k]) => k)\n\n/*  ------------------------------------------------------------------------ */\n\nColors.rgb = {\n\n    black:   [0,     0,   0],\n    red:     [204,   0,   0],\n    green:   [0,   204,   0],\n    yellow:  [204, 102,   0],\n    blue:    [0,     0, 255],\n    magenta: [204,   0, 204],\n    cyan:    [0,   153, 255],\n    white:   [255, 255, 255]\n}\n\nColors.rgbBright = {\n\n    black:   [0,     0,   0],\n    red:     [255,  51,   0],\n    green:   [51,  204,  51],\n    yellow:  [255, 153,  51],\n    blue:    [26,  140, 255],\n    magenta: [255,   0, 255],\n    cyan:    [0,   204, 255],\n    white:   [255, 255, 255]\n}\n\n/*  ------------------------------------------------------------------------ */\n\nmodule.exports = Colors\n\n/*  ------------------------------------------------------------------------ */\n\n",
+    "static": true,
+    "longname": "ansicolor/ansicolor.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 1,
+    "kind": "variable",
+    "name": "O",
+    "memberof": "ansicolor/ansicolor.js",
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~O",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 5,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 2,
+    "kind": "variable",
+    "name": "colorCodes",
+    "memberof": "ansicolor/ansicolor.js",
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~colorCodes",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 9,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "string[]"
+      ]
+    }
+  },
+  {
+    "__docId__": 3,
+    "kind": "function",
+    "name": "clean",
+    "memberof": "ansicolor/ansicolor.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~clean",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 28,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "obj",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 4,
+    "kind": "class",
+    "name": "Color",
+    "memberof": "ansicolor/ansicolor.js",
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~Color",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 35,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "interface": false
+  },
+  {
+    "__docId__": 5,
+    "kind": "constructor",
+    "name": "constructor",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 37,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "background",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "name",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "brightness",
+        "types": [
+          "*"
+        ]
+      }
+    ]
+  },
+  {
+    "__docId__": 6,
+    "kind": "member",
+    "name": "background",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#background",
+    "access": null,
+    "description": null,
+    "lineNumber": 39,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 7,
+    "kind": "member",
+    "name": "name",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#name",
+    "access": null,
+    "description": null,
+    "lineNumber": 40,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 8,
+    "kind": "member",
+    "name": "brightness",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#brightness",
+    "access": null,
+    "description": null,
+    "lineNumber": 41,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 9,
+    "kind": "get",
+    "name": "inverse",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#inverse",
+    "access": null,
+    "description": null,
+    "lineNumber": 44,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 10,
+    "kind": "get",
+    "name": "clean",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#clean",
+    "access": null,
+    "description": null,
+    "lineNumber": 48,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 11,
+    "kind": "method",
+    "name": "defaultBrightness",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#defaultBrightness",
+    "access": null,
+    "description": null,
+    "lineNumber": 54,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "value",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 12,
+    "kind": "method",
+    "name": "css",
+    "memberof": "ansicolor/ansicolor.js~Color",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Color#css",
+    "access": null,
+    "description": null,
+    "lineNumber": 59,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "inverted",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 13,
+    "kind": "class",
+    "name": "Code",
+    "memberof": "ansicolor/ansicolor.js",
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~Code",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 76,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "interface": false
+  },
+  {
+    "__docId__": 14,
+    "kind": "constructor",
+    "name": "constructor",
+    "memberof": "ansicolor/ansicolor.js~Code",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Code#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 78,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "n",
+        "types": [
+          "*"
+        ]
+      }
+    ]
+  },
+  {
+    "__docId__": 15,
+    "kind": "member",
+    "name": "value",
+    "memberof": "ansicolor/ansicolor.js~Code",
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Code#value",
+    "access": null,
+    "description": null,
+    "lineNumber": 79,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 16,
+    "kind": "get",
+    "name": "type",
+    "memberof": "ansicolor/ansicolor.js~Code",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Code#type",
+    "access": null,
+    "description": null,
+    "lineNumber": 81,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 17,
+    "kind": "get",
+    "name": "subtype",
+    "memberof": "ansicolor/ansicolor.js~Code",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Code#subtype",
+    "access": null,
+    "description": null,
+    "lineNumber": 84,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 18,
+    "kind": "get",
+    "name": "str",
+    "memberof": "ansicolor/ansicolor.js~Code",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Code#str",
+    "access": null,
+    "description": null,
+    "lineNumber": 87,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 19,
+    "kind": "method",
+    "name": "str",
+    "memberof": "ansicolor/ansicolor.js~Code",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~Code.str",
+    "access": null,
+    "description": null,
+    "lineNumber": 90,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "x",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 20,
+    "kind": "get",
+    "name": "isBrightness",
+    "memberof": "ansicolor/ansicolor.js~Code",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Code#isBrightness",
+    "access": null,
+    "description": null,
+    "lineNumber": 93,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 21,
+    "kind": "function",
+    "name": "camel",
+    "memberof": "ansicolor/ansicolor.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~camel",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 114,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "a",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      }
+    ]
+  },
+  {
+    "__docId__": 22,
+    "kind": "function",
+    "name": "replaceAll",
+    "memberof": "ansicolor/ansicolor.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~replaceAll",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 116,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "str",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "a",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "b",
+        "types": [
+          "*"
+        ]
+      }
+    ]
+  },
+  {
+    "__docId__": 23,
+    "kind": "function",
+    "name": "denormalizeBrightness",
+    "memberof": "ansicolor/ansicolor.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~denormalizeBrightness",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 123,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "s",
+        "types": [
+          "*"
+        ]
+      }
+    ]
+  },
+  {
+    "__docId__": 24,
+    "kind": "function",
+    "name": "normalizeBrightness",
+    "memberof": "ansicolor/ansicolor.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~normalizeBrightness",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 124,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "s",
+        "types": [
+          "*"
+        ]
+      }
+    ]
+  },
+  {
+    "__docId__": 25,
+    "kind": "function",
+    "name": "wrap",
+    "memberof": "ansicolor/ansicolor.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~wrap",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 126,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "x",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "openCode",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "closeCode",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 26,
+    "kind": "variable",
+    "name": "stringWrappingMethods",
+    "memberof": "ansicolor/ansicolor.js",
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~stringWrappingMethods",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 139,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 27,
+    "kind": "function",
+    "name": "assignStringWrappingAPI",
+    "memberof": "ansicolor/ansicolor.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~assignStringWrappingAPI",
+    "access": null,
+    "export": false,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 159,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "params": [
+      {
+        "name": "target",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "wrapBefore",
+        "optional": true,
+        "types": [
+          "*"
+        ],
+        "defaultRaw": "target",
+        "defaultValue": "target"
+      }
+    ]
+  },
+  {
+    "__docId__": 28,
+    "kind": "class",
+    "name": "Colors",
+    "memberof": "ansicolor/ansicolor.js",
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~Colors",
+    "access": null,
+    "export": true,
+    "importPath": "ansicolor/ansicolor/ansicolor.js",
+    "importStyle": "Colors",
+    "description": "Represents an ANSI-escaped string.",
+    "lineNumber": 173,
+    "interface": false
+  },
+  {
+    "__docId__": 29,
+    "kind": "constructor",
+    "name": "constructor",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#constructor",
+    "access": null,
+    "description": "",
+    "lineNumber": 178,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "s",
+        "description": "a string containing ANSI escape codes."
+      }
+    ]
+  },
+  {
+    "__docId__": 30,
+    "kind": "member",
+    "name": "spans",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#spans",
+    "access": null,
+    "description": null,
+    "lineNumber": 189,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 31,
+    "kind": "member",
+    "name": "spans",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#spans",
+    "access": null,
+    "description": null,
+    "lineNumber": 193,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*[]"
+      ]
+    }
+  },
+  {
+    "__docId__": 32,
+    "kind": "get",
+    "name": "str",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#str",
+    "access": null,
+    "description": null,
+    "lineNumber": 197,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 33,
+    "kind": "get",
+    "name": "parsed",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#parsed",
+    "access": null,
+    "description": null,
+    "lineNumber": 201,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 34,
+    "kind": "get",
+    "name": "asChromeConsoleLogArguments",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#asChromeConsoleLogArguments",
+    "access": null,
+    "description": null,
+    "lineNumber": 253,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "undefined[]"
+      ]
+    }
+  },
+  {
+    "__docId__": 35,
+    "kind": "get",
+    "name": "browserConsoleArguments",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#browserConsoleArguments",
+    "access": null,
+    "description": null,
+    "lineNumber": 261,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 36,
+    "kind": "get",
+    "name": "nice",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~Colors.nice",
+    "access": null,
+    "description": "installs String prototype extensions",
+    "examples": [
+      "require ('ansicolor').nice\nconsole.log ('foo'.bright.red)"
+    ],
+    "lineNumber": 269,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 37,
+    "kind": "method",
+    "name": "parse",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~Colors.parse",
+    "access": null,
+    "description": "parses a string containing ANSI escape codes",
+    "lineNumber": 284,
+    "params": [
+      {
+        "name": "s",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Colors"
+      ],
+      "spread": false,
+      "description": "parsed representation."
+    }
+  },
+  {
+    "__docId__": 38,
+    "kind": "method",
+    "name": "strip",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "ansicolor/ansicolor.js~Colors.strip",
+    "access": null,
+    "description": "strips ANSI codes from a string",
+    "lineNumber": 293,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "s",
+        "description": "a string containing ANSI escape codes."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": "clean string."
+    }
+  },
+  {
+    "__docId__": 39,
+    "kind": "method",
+    "name": "[Symbol.iterator]",
+    "memberof": "ansicolor/ansicolor.js~Colors",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "ansicolor/ansicolor.js~Colors#[Symbol.iterator]",
+    "access": null,
+    "description": "",
+    "examples": [
+      "const spans = [...ansi.parse ('\\u001b[7m\\u001b[7mfoo\\u001b[7mbar\\u001b[27m')]"
+    ],
+    "lineNumber": 301,
+    "params": [],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 41,
+    "kind": "external",
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 42,
+    "kind": "external",
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 43,
+    "kind": "external",
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 44,
+    "kind": "external",
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 45,
+    "kind": "external",
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 46,
+    "kind": "external",
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 47,
+    "kind": "external",
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 48,
+    "kind": "external",
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 49,
+    "kind": "external",
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 50,
+    "kind": "external",
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 51,
+    "kind": "external",
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 52,
+    "kind": "external",
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 53,
+    "kind": "external",
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 54,
+    "kind": "external",
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 55,
+    "kind": "external",
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 56,
+    "kind": "external",
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 57,
+    "kind": "external",
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 58,
+    "kind": "external",
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 59,
+    "kind": "external",
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 60,
+    "kind": "external",
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 61,
+    "kind": "external",
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 62,
+    "kind": "external",
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 63,
+    "kind": "external",
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 64,
+    "kind": "external",
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 65,
+    "kind": "external",
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 66,
+    "kind": "external",
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 67,
+    "kind": "external",
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 68,
+    "kind": "external",
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 69,
+    "kind": "external",
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 70,
+    "kind": "external",
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 71,
+    "kind": "external",
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 72,
+    "kind": "external",
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 73,
+    "kind": "external",
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 74,
+    "kind": "external",
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 75,
+    "kind": "external",
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 76,
+    "kind": "external",
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 77,
+    "kind": "external",
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 78,
+    "kind": "external",
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 79,
+    "kind": "external",
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 80,
+    "kind": "external",
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 81,
+    "kind": "external",
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 82,
+    "kind": "external",
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 83,
+    "kind": "external",
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 84,
+    "kind": "external",
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 85,
+    "kind": "external",
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 86,
+    "kind": "external",
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 87,
+    "kind": "external",
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": "",
+    "lineNumber": 193,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 89,
+    "kind": "external",
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 90,
+    "kind": "external",
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 91,
+    "kind": "external",
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 92,
+    "kind": "external",
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 93,
+    "kind": "external",
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 94,
+    "kind": "external",
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 95,
+    "kind": "external",
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 96,
+    "kind": "external",
+    "name": "AudioContext",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/AudioContext",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~AudioContext",
+    "access": null,
+    "description": "",
+    "lineNumber": 34,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 97,
+    "kind": "testFile",
+    "name": "ansicolor/test.js",
+    "content": "\"use strict\";\n\n/*  ------------------------------------------------------------------------ */\n\nconst assert = require ('assert'),\n      ansi   = require ('./ansicolor').nice\n\n/*  ------------------------------------------------------------------------ */\n\ndescribe ('ansicolor', () => {\n\n    const dbg = s => s.replace (/\\u001b\\[(\\d+)m/g, '\\u001b[36m{$1}\\u001b[39m')\n\n    const same = (a, b) => {\n\n        console.log ('\\n')\n\n        console.log ('expected:', b)\n        console.log ('         ', dbg (b), '\\n')\n\n        console.log ('actual  :', a)\n        console.log ('         ', dbg (a), '\\n')\n\n        assert.equal (a, b)\n    }\n\n    it ('works', () => {\n\n        same ('foo' + ansi.green (ansi.inverse (ansi.bgBrightCyan ('bar') + 'baz') + 'qux'),\n              'foo\\u001b[32m\\u001b[7m\\u001b[106mbar\\u001b[49mbaz\\u001b[27mqux\\u001b[39m')\n    })\n\n    it ('chaining works', () => {\n\n        same (ansi.underline.bright.green ('chai' + ansi.dim.red.bgBrightCyan ('ning')),\n             '\\u001b[4m\\u001b[22m\\u001b[1m\\u001b[32mchai\\u001b[22m\\u001b[2m\\u001b[31m\\u001b[106mning\\u001b[49m\\u001b[32m\\u001b[22m\\u001b[1m\\u001b[39m\\u001b[22m\\u001b[24m')\n    })\n\n    it ('nice mode works', () => {\n\n        ansi.nice // shouldn't mess up with repeated calls\n        ansi.nice\n\n        same ('foo' + ('bar'.red.underline.bright + 'baz').green.underline + 'qux',\n              'foo\\u001b[4m\\u001b[32m\\u001b[22m\\u001b[1m\\u001b[4m\\u001b[31mbar\\u001b[32m\\u001b[4m\\u001b[22mbaz\\u001b[39m\\u001b[24mqux')\n    })\n\n    it ('brightness hierarchy works', () => {\n\n        same (('foo' + 'bar'.dim + 'baz').bright, '\\u001b[22m\\u001b[1mfoo\\u001b[22m\\u001b[2mbar\\u001b[22m\\u001b[1mbaz\\u001b[22m')\n    })\n\n    it ('hierarchy works', () => {\n\n        same ((('red'.red + 'green').green + 'blue').blue, '\\u001b[34m\\u001b[32m\\u001b[31mred\\u001b[32mgreen\\u001b[34mblue\\u001b[39m')\n\n        same (('foo'.cyan         + 'bar').red,         '\\u001b[31m\\u001b[36mfoo\\u001b[31mbar\\u001b[39m')\n        same (('foo'.bgCyan       + 'bar').bgRed,       '\\u001b[41m\\u001b[46mfoo\\u001b[41mbar\\u001b[49m')\n        same (('foo'.bgBrightCyan + 'bar').bgBrightRed, '\\u001b[101m\\u001b[106mfoo\\u001b[101mbar\\u001b[49m')\n        same (('foo'.underline    + 'bar').underline,   '\\u001b[4m\\u001b[4mfoo\\u001b[4mbar\\u001b[24m')\n\n        same (('foo'.bright  + 'bar').bright,   '\\u001b[22m\\u001b[1m\\u001b[22m\\u001b[1mfoo\\u001b[22m\\u001b[1mbar\\u001b[22m')\n        same (('foo'.dim     + 'bar').dim,      '\\u001b[22m\\u001b[2m\\u001b[22m\\u001b[2mfoo\\u001b[22m\\u001b[2mbar\\u001b[22m')\n        same (('foo'.inverse + 'bar').inverse,  '\\u001b[7m\\u001b[7mfoo\\u001b[7mbar\\u001b[27m')\n    })\n\n    it ('basic parsing works', () => {\n\n        const parsed = ansi.parse ('foo'.bgBrightRed.bright.italic.underline + 'bar'.red.dim)\n\n        assert.deepEqual ([...parsed], parsed.spans)\n\n        assert.deepEqual (parsed.spans,\n\n            [ { css: 'font-weight: bold;font-style: italic;text-decoration: underline;background:rgba(255,51,0,1);',\n                italic: true,\n                bold: true,\n                underline: true,\n                color: { bright: true },\n                bgColor: { name: 'red', bright: true },\n                text: 'foo',\n                code: { value: 49 } },\n\n              { css: 'color:rgba(204,0,0,0.5);',\n                color: { name: 'red', dim: true },\n                text: 'bar',\n                code: { value: 39 } } ])\n    })\n\n    it ('asChromeConsoleLogArguments works', () => {\n\n        const parsed = ansi.parse ('foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen)\n\n        assert.deepEqual (parsed.asChromeConsoleLogArguments, parsed.browserConsoleArguments) // legacy API\n\n        assert.deepEqual (parsed.asChromeConsoleLogArguments, [\n\n                            \"%cfoo%cbar%cbaz\",\n                            \"\",\n                            \"font-weight: bold;text-decoration: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);\",\n                            \"background:rgba(0,204,0,1);\"\n                        ])\n    })\n\n    it ('.dim works in CSS (there was a bug)', () => {\n\n        assert.deepEqual (ansi.parse ('foo'.dim).spans, [ { css: 'color:rgba(0,0,0,0.5);', color: { dim: true }, text: 'foo', code: { value: 22 } } ])\n    })\n\n    it ('stripping works', () => { // clauses were copypasted from strip-ansi\n\n        assert.equal ('foofoo', ansi.strip ('\\u001b[0m\\u001b[4m\\u001b[42m\\u001b[31mfoo\\u001b[39m\\u001b[49m\\u001b[24mfoo\\u001b[0m'))\n        assert.equal ('bar',    ansi.strip ('\\x1b[0;33;49;3;9;4mbar\\x1b[0m'))\n    })\n\n    it ('color names enumeration works', () => {\n\n        assert.deepEqual (ansi.names, [\n                                'black',\n                                'bgBlack',\n                                'bgBrightBlack',\n                                'red',\n                                'bgRed',\n                                'bgBrightRed',\n                                'green',\n                                'bgGreen',\n                                'bgBrightGreen',\n                                'yellow',\n                                'bgYellow',\n                                'bgBrightYellow',\n                                'blue',\n                                'bgBlue',\n                                'bgBrightBlue',\n                                'magenta',\n                                'bgMagenta',\n                                'bgBrightMagenta',\n                                'cyan',\n                                'bgCyan',\n                                'bgBrightCyan',\n                                'white',\n                                'bgWhite',\n                                'bgBrightWhite',\n                                'default',\n                                'bgDefault',\n                                'bgBrightDefault',\n                                'bright',\n                                'dim',\n                                'italic',\n                                'underline',\n                                'inverse'\n                            ])\n    })\n\n    it ('changing .rgb and .rgbBright works', () => {\n\n        ansi.rgb.red       = [255,0,0]\n        ansi.rgbBright.red = [255,127,0]\n\n        assert.equal (ansi.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')\n    })\n\n    it ('type coercion works', () => {\n\n        assert.equal (ansi.red (123), ansi.red ('123'))\n    })\n\n    it ('newline separation works', () => {\n\n        assert.equal ('foo\\nbar\\nbaz'.red, 'foo'.red + '\\n' + 'bar'.red + '\\n' + 'baz'.red)\n    })\n\n    it ('inverse works', () => {\n\n        same ('bgRed.inverse'.bgRed.inverse, '\\u001b[7m\\u001b[41mbgRed.inverse\\u001b[49m\\u001b[27m')\n\n        assert.equal (ansi.parse ('foo'.bgRed.inverse).spans[0].css, 'background:rgba(255,255,255,1);color:rgba(255,0,0,1);')\n    })\n\n    it ('.str works', () => {\n\n        assert.equal (new ansi ('foo\\u001b[32m\\u001b[7m\\u001b[106mbar\\u001b[49mbaz\\u001b[27mqux\\u001b[39m').str,\n                                'foo\\u001b[32m\\u001b[7m\\u001b[106mbar\\u001b[49mbaz\\u001b[27mqux\\u001b[39m')\n    })\n})\n\n\n\n",
+    "static": true,
+    "longname": "ansicolor/test.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 98,
+    "kind": "testDescribe",
+    "name": "describe0",
+    "testId": 0,
+    "memberof": "ansicolor/test.js",
+    "testDepth": 0,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0",
+    "access": null,
+    "description": "ansicolor",
+    "lineNumber": 10
+  },
+  {
+    "__docId__": 99,
+    "kind": "testIt",
+    "name": "it1",
+    "testId": 1,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it1",
+    "access": null,
+    "description": "works",
+    "lineNumber": 27
+  },
+  {
+    "__docId__": 100,
+    "kind": "testIt",
+    "name": "it2",
+    "testId": 2,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it2",
+    "access": null,
+    "description": "chaining works",
+    "lineNumber": 33
+  },
+  {
+    "__docId__": 101,
+    "kind": "testIt",
+    "name": "it3",
+    "testId": 3,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it3",
+    "access": null,
+    "description": "nice mode works",
+    "lineNumber": 39
+  },
+  {
+    "__docId__": 102,
+    "kind": "testIt",
+    "name": "it4",
+    "testId": 4,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it4",
+    "access": null,
+    "description": "brightness hierarchy works",
+    "lineNumber": 48
+  },
+  {
+    "__docId__": 103,
+    "kind": "testIt",
+    "name": "it5",
+    "testId": 5,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it5",
+    "access": null,
+    "description": "hierarchy works",
+    "lineNumber": 53
+  },
+  {
+    "__docId__": 104,
+    "kind": "testIt",
+    "name": "it6",
+    "testId": 6,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it6",
+    "access": null,
+    "description": "basic parsing works",
+    "lineNumber": 67
+  },
+  {
+    "__docId__": 105,
+    "kind": "testIt",
+    "name": "it7",
+    "testId": 7,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it7",
+    "access": null,
+    "description": "asChromeConsoleLogArguments works",
+    "lineNumber": 90
+  },
+  {
+    "__docId__": 106,
+    "kind": "testIt",
+    "name": "it8",
+    "testId": 8,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it8",
+    "access": null,
+    "description": ".dim works in CSS (there was a bug)",
+    "lineNumber": 105
+  },
+  {
+    "__docId__": 107,
+    "kind": "testIt",
+    "name": "it9",
+    "testId": 9,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it9",
+    "access": null,
+    "description": "stripping works",
+    "lineNumber": 110
+  },
+  {
+    "__docId__": 108,
+    "kind": "testIt",
+    "name": "it10",
+    "testId": 10,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it10",
+    "access": null,
+    "description": "color names enumeration works",
+    "lineNumber": 116
+  },
+  {
+    "__docId__": 109,
+    "kind": "testIt",
+    "name": "it11",
+    "testId": 11,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it11",
+    "access": null,
+    "description": "changing .rgb and .rgbBright works",
+    "lineNumber": 154
+  },
+  {
+    "__docId__": 110,
+    "kind": "testIt",
+    "name": "it12",
+    "testId": 12,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it12",
+    "access": null,
+    "description": "type coercion works",
+    "lineNumber": 162
+  },
+  {
+    "__docId__": 111,
+    "kind": "testIt",
+    "name": "it13",
+    "testId": 13,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it13",
+    "access": null,
+    "description": "newline separation works",
+    "lineNumber": 167
+  },
+  {
+    "__docId__": 112,
+    "kind": "testIt",
+    "name": "it14",
+    "testId": 14,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it14",
+    "access": null,
+    "description": "inverse works",
+    "lineNumber": 172
+  },
+  {
+    "__docId__": 113,
+    "kind": "testIt",
+    "name": "it15",
+    "testId": 15,
+    "memberof": "ansicolor/test.js~describe0",
+    "testDepth": 1,
+    "static": true,
+    "longname": "ansicolor/test.js~describe0.it15",
+    "access": null,
+    "description": ".str works",
+    "lineNumber": 179
+  }
+]

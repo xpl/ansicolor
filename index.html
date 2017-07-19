@@ -1,34 +1,179 @@
+<!DOCTYPE html>
 <html>
-	<head>
-		<title>Ansicolor Test Page</title>
-		<script>window.module = {}</script>
-		<script src="https://rawgit.com/xpl/ansicolor/master/ansicolor.js"></script>
-		<script>color = module.exports.nice</script>
-		<style>
-			* { font-family: monospace; font-size: 22px; }
-			input.err { background: rgb(255,200,200); }
-		</style>
-	</head>
-	<code>
-		color = require ('ansicolor').nice
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl">
+  <title data-ice="title">API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
 
-		<br><br>
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/xpl/ansicolor.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
 
-		console.log (...color.parse (<input oninput="foo()" id="foo" style="width: 340px;" placeholder="type here, e.g. 'foo'.red" />).asWebInspectorConsoleLogArguments)
-	</code>
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/ansicolor/ansicolor.js~Colors.html">Colors</a></span></span></li>
+</ul>
+</div>
+</nav>
 
-	<script>
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="ansicolor">ansicolor</h1>
+<p><a href="https://travis-ci.org/xpl/ansicolor"><img src="https://travis-ci.org/xpl/ansicolor.svg?branch=master" alt="Build Status"></a> <a href="https://coveralls.io/github/xpl/ansicolor"><img src="https://coveralls.io/repos/github/xpl/ansicolor/badge.svg" alt="Coverage Status"></a> <a href="https://npmjs.com/package/ansicolor"><img src="https://img.shields.io/npm/v/ansicolor.svg" alt="npm"></a></p>
+<p>A quality library for the ANSI color/style management. Small. Clean. No dependencies.</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">npm install ansicolor</code>
+</code></pre>
+<h2 id="what-for">What for</h2>
+<ul>
+<li>String coloring with ANSI escape codes</li>
+<li>Solves the <a href="#why-another-one">style hierarchy problem</a> (at which other similar tools fail)</li>
+<li>Parsing/removing ANSI style data from strings</li>
+<li>Converting ANSI styles to a Chrome DevTools-compatible output (<a href="https://xpl.github.io/ansicolor/">interactive demo</a>)</li>
+<li>A middleware for your <a href="https://github.com/xpl/ololog">platform-agnostic logging system</a></li>
+</ul>
+<h2 id="why-another-one-">Why another one?</h2>
+<p>Other tools lack consistency, failing to solve the simple hierarchy problem:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">require (&apos;colors&apos;) // a popular color utility
 
-		input = document.getElementById ('foo')
+console.log ((&apos;foo&apos;.cyan + &apos;bar&apos;).red)</code>
+</code></pre>
+<p><img src="http://cdn.jpg.wtf/futurico/85/9b/1470626860-859b24350e22df74fd7497e9dc0d8d42.png" alt="pic"></p>
+<p>WTF, <code>bar</code> is not rendered red! It sucks. This is because ANSI codes are not hierarchical (as with XML/HTML), they&apos;re linear, and without some special magic nothing will work. <strong>Ansicolor</strong> does that magic for you:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">require (&apos;ansicolor&apos;).nice // .nice for unsafe String extensions
 
-		function foo () {
-			try {
-				eval ('console.log (...color.parse (' + input.value + ').asWebInspectorConsoleLogArguments)')
-				input.className = ''
-			} catch (e) {
-				input.className = 'err'
-			}
-		}
-	</script>
-	
+console.log ((&apos;foo&apos;.cyan + &apos;bar&apos;).red)</code>
+</code></pre>
+<p><img src="http://cdn.jpg.wtf/futurico/3c/61/1470626989-3c61b64d0690b0b413be367841650426.png" alt="pic"></p>
+<p>Nice!</p>
+<h2 id="crash-course">Crash course</h2>
+<h3 id="safe-mode-default-">Safe mode (default)</h3>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">ansi = require (&apos;ansicolor&apos;)</code>
+</code></pre>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">console.log (&apos;foo&apos; + ansi.green (ansi.inverse (ansi.bgBrightCyan (&apos;bar&apos;)) + &apos;baz&apos;) + &apos;qux&apos;)</code>
+</code></pre>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">console.log (ansi.underline.bright.green (&apos;foo&apos; + ansi.dim.red.bgBrightCyan (&apos;bar&apos;))) // method chaining</code>
+</code></pre>
+<h3 id="nice-mode-by-request-">Nice mode (by request)</h3>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">ansi = require (&apos;ansicolor&apos;).nice</code>
+</code></pre>
+<p>It adds styling APIs directly to the <code>String</code> prototype, setting something like a DSL for infix-style string coloring. Convenient, but unsafe: avoid use in public modules, as it pollutes global objects, causing potential hard-to-debug compatibility issues.</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">console.log (&apos;foo&apos;.red.bright + &apos;bar&apos;.bgYellow.underline.dim)</code>
+</code></pre>
+<h3 id="supported-styles">Supported styles</h3>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">&apos;foreground colors&apos;
+    .black.red.green.yellow.blue.magenta.cyan.white</code>
+</code></pre>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">&apos;background colors&apos;
+    .bgBlack.bgRed.bgGreen.bgYellow.bgBlue.bgMagenta.bgCyan.bgWhite</code>
+</code></pre>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">&apos;bright background colors&apos;
+    .bgBrightBlack.bgBrightRed.bgBrightGreen.bgBrightYellow.bgBrightBlue.bgBrightMagenta.bgBrightCyan.bgBrightWhite</code>
+</code></pre>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">&apos;styles&apos;
+    .bright.dim.italic.underline.inverse // italic may lack support on your platform</code>
+</code></pre>
+<p>You also can read these method names programmatically:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">ansi.names // [ &apos;black&apos;, &apos;bgBlack&apos;, &apos;bgBrightBlack&apos;, &apos;red&apos;, &apos;bgRed&apos;, ...</code>
+</code></pre>
+<h2 id="removing-ansi-styles-from-a-string">Removing ANSI styles from a string</h2>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">ansi.strip (&apos;\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m&apos;)) // &apos;foofoo&apos;</code>
+</code></pre>
+<h2 id="reading-style-information-css-output">Reading style information / CSS output</h2>
+<p>Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging &#x2014; that works not only in terminal, but in browsers too. Here&apos;s how you do it:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const parsed = ansi.parse (&apos;foo&apos;.bgBrightRed.bright.italic + &apos;bar&apos;.red.dim)</code>
+</code></pre>
+<p>It will return a pseudo-array of styled spans, iterable with <code>for ... of</code> and convertable to an array with spread operator. There also exists <code>.spans</code> property for obtaining the actual array directly:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">assert.deepEqual (parsed.spans /* or [...parsed] */,
+
+    [ { css: &apos;font-weight: bold;font-style: italic;background:rgba(255,51,0,1);&apos;,
+        italic: true,
+        bold: true,
+        color: { bright: true },
+        bgColor: { name: &apos;red&apos;, bright: true },
+        text: &apos;foo&apos; },
+
+      { css: &apos;color:rgba(204,0,0,0.5);&apos;,
+        color: { name: &apos;red&apos;, dim: true },
+        text: &apos;bar&apos; } ])</code>
+</code></pre>
+<h3 id="custom-color-theme">Custom color theme</h3>
+<p>You can change the default RGB values:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">ansi.rgb = {
+
+    black:   [0,     0,   0],
+    red:     [204,   0,   0],
+    green:   [0,   204,   0],
+    yellow:  [204, 102,   0],
+    blue:    [0,     0, 255],
+    magenta: [204,   0, 204],
+    cyan:    [0,   153, 255],
+    white:   [255, 255, 255]
+}
+
+ansi.rgbBright = {
+
+    black:   [0,     0,   0],
+    red:     [255,  51,   0],
+    green:   [51,  204,  51],
+    yellow:  [255, 153,  51],
+    blue:    [26,  140, 255],
+    magenta: [255,   0, 255],
+    cyan:    [0,   204, 255],
+    white:   [255, 255, 255]
+}</code>
+</code></pre>
+<h2 id="chrome-devtools-compatibility">Chrome DevTools compatibility</h2>
+<p>Some browsers support color logging with <code>console.log</code>, but they don&apos;t understand ANSI colors, implementing a proprietary CSS-based format instead. <em>Ansicolor</em> can help you with converting styled strings to argument lists acceptable by Chrome&apos;s <code>console.log</code>:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const string = &apos;foo&apos; + (&apos;bar&apos;.red.underline.bright.inverse + &apos;baz&apos;).bgGreen
+const parsed = ansi.parse (string)
+
+console.log (...parsed.asChromeConsoleLogArguments) // prints with colors in Chrome!</code>
+</code></pre>
+<p>Here&apos;s what the format looks like:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">parsed.asChromeConsoleLogArguments // [ &quot;%cfoo%cbar%cbaz&quot;,
+                                   //   &quot;&quot;,
+                                   //   &quot;font-weight: bold;text-decoration: underline;background:rgba(255,51,0,1);color:rgba(0,204,0,1);&quot;,
+                                   //   &quot;background:rgba(0,204,0,1);&quot;
+                                   // ]</code>
+</code></pre>
+<p>You can even play with this feature online: <a href="https://xpl.github.io/ansicolor/">demo page</a>. Open the DevTools console and type expressions in the input box to see how it renders.</p>
+<p>Happy logging!</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="https://github.com/xpl/ololog">Ololog!</a></li>
+</ul>
+</div>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.5.2)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
 </html>
