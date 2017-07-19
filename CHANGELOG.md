@@ -1,4 +1,4 @@
-# Recent updates / changelog
+# Recent Updates / Changelog
 
 - Each input line now gets wrapped separately, i.e. `'foo\nbar'.red === 'foo'.red + '\n' + 'bar'.red`
 - You can now do `ansi.green.inverse.underline.italic ('hello')` (chainable API)
