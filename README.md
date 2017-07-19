@@ -11,7 +11,7 @@ npm install ansicolor
 ## What For
 
 - String coloring with ANSI escape codes
-- Solves the [style hierarchy problem](#why-another-one) (where other similar tools fail)
+- Solves the [style hierarchy problem](#why-another-one) (when other similar tools fail)
 - Parsing/removing ANSI style data from strings
 - Converting ANSI styles to CSS or a Chrome DevTools-compatible output
 - A middleware for your [platform-agnostic logging system](https://github.com/xpl/ololog)
@@ -28,7 +28,7 @@ console.log (('foo'.cyan + 'bar').red)
 
 ![pic](http://cdn.jpg.wtf/futurico/85/9b/1470626860-859b24350e22df74fd7497e9dc0d8d42.png)
 
-WTF?! The `bar` word above should be rendered in red, but it's not! It sucks. That is because ANSI codes are linear, not hierarchical (as with XML/HTML). A special kind of magic is needed to make this work. **Ansicolor** does that magic for you:
+WTF?! The `bar` word above should be rendered in red, but it's not! That sucks. It's because ANSI codes are linear, not hierarchical (as with XML/HTML). A special kind of magic is needed to make this work. **Ansicolor** does that magic for you:
 
 ```javascript
 require ('ansicolor').nice // .nice for unsafe String extensions
@@ -105,7 +105,7 @@ Inspection of ANSI styles in arbitrary strings is essential when implementing pl
 const parsed = ansi.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
 ```
 
-The `ansi.parse ()` method will return a pseudo-array of styled spans, you can iterate over it with a `for ... of` loop and convert it to an array with *spread operator*. Also, there's the `.spans` property for obtaining the already-spread array directly:
+The `ansi.parse ()` method will return a pseudo-array of styled spans, you can iterate over it with a `for ... of` loop and convert it to an array with the *spread operator* (`...`). Also, there's the `.spans` property for obtaining the already-spread array directly:
 
 ```javascript
 assert.deepEqual (parsed.spans /* or [...parsed] */,
