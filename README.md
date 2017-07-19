@@ -8,7 +8,7 @@ A quality library for the ANSI color/style management. Small. Clean. No dependen
 npm install ansicolor
 ```
 
-## What for
+## What For
 
 - String coloring with ANSI escape codes
 - Solves the [style hierarchy problem](#why-another-one) (where other similar tools fail)
@@ -16,7 +16,7 @@ npm install ansicolor
 - Converting ANSI styles to CSS or a Chrome DevTools-compatible output
 - A middleware for your [platform-agnostic logging system](https://github.com/xpl/ololog)
 
-## Why another one?
+## Why Another One?
 
 Other tools lack consistency, failing to solve a simple hierarchy problem:
 
@@ -40,9 +40,9 @@ console.log (('foo'.cyan + 'bar').red)
 
 Nice!
 
-## Crash course
+## Crash Course
 
-### Safe mode (default)
+### Safe Mode (default)
 
 ```javascript
 ansi = require ('ansicolor')
@@ -54,7 +54,7 @@ console.log ('foo' + ansi.green (ansi.inverse (ansi.bgBrightCyan ('bar')) + 'baz
 console.log (ansi.underline.bright.green ('foo' + ansi.dim.red.bgBrightCyan ('bar'))) // method chaining
 ```
 
-### Nice mode (by request)
+### Nice Mode (by request)
 
 ```javascript
 ansi = require ('ansicolor').nice
@@ -66,7 +66,7 @@ The `('ansicolor').nice` export defines styling APIs on the `String` prototype d
 console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
 ```
 
-### Supported styles
+### Supported Styles
 
 ```javascript
 'foreground colors'
@@ -91,13 +91,13 @@ You also can use these method names programmatically:
 ansi.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
 ```
 
-## Removing ANSI styles from a string
+## Removing ANSI Styles From Strings
 
 ```javascript
 ansi.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
 ```
 
-## Reading style information / CSS output
+## Converting to CSS/HTML
 
 Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that piece of code is available under command line interface and in a browser as well. Here's an example of how you would parse a colored string into an array-like structure. That structure can be traversed later to build HTML/JSON/XML or any other markup/syntax.
 
@@ -122,9 +122,9 @@ assert.deepEqual (parsed.spans /* or [...parsed] */,
         text: 'bar' } ])
 ```
 
-### Custom color theme
+### Custom Color Themes
 
-You can change the default RGB values:
+You can change default RGB values:
 
 ```javascript
 ansi.rgb = {
@@ -152,7 +152,7 @@ ansi.rgbBright = {
 }
 ```
 
-## Chrome DevTools compatibility
+## Chrome DevTools Compatibility
 
 Web browsers usually implement their own proprietary CSS-based color formats for `console.log` and most of them fail to display standard ANSI colors. _Ansicolor_ offers you a helper method to convert ANSI-styled strings to browser-compatible argument lists acceptable by Chrome's `console.log`:
 
@@ -177,6 +177,6 @@ Play with this feature online: [demo page](https://xpl.github.io/ololog/). Open 
 
 Happy logging!
 
-## See also
+## See Also
 
 - [Ololog!](https://github.com/xpl/ololog)
