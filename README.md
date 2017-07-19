@@ -173,7 +173,7 @@ parsed.asChromeConsoleLogArguments // [ "%cfoo%cbar%cbaz",
                                    // ]
 ```
 
-Play with this feature online: [demo page](https://xpl.github.io/ansicolor/). Open the DevTools console and type expressions in the input box to see colored console output.
+Play with this feature online: [demo page](https://xpl.github.io/ololog/). Open the DevTools console and type expressions in the input box to see colored console output.
 
 Happy logging!
 
