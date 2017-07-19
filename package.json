@@ -7,6 +7,7 @@
     "test": "nyc --reporter=html --reporter=text mocha --reporter spec",
     "lint": "eslint ansicolor.js",
     "lint-test": "eslint test.js",
+    "doc": "esdoc -c esdoc.json",
     "autotest": "mocha --reporter spec --watch",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
@@ -86,6 +87,8 @@
   "homepage": "https://github.com/xpl/ansicolor",
   "devDependencies": {
     "coveralls": "^2.13.1",
+    "esdoc": "^0.5.2",
+    "esdoc-node": "^1.0.2",
     "eslint": "^4.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^2.4.5",

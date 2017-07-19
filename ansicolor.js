@@ -167,8 +167,14 @@ const assignStringWrappingAPI = (target, wrapBefore = target) =>
 
 /*  ------------------------------------------------------------------------ */
 
+/**
+ * Represents an ANSI-escaped string.
+ */
 class Colors {
 
+    /**
+     * @param {string} s a string containing ANSI escape codes.
+     */
     constructor (s) {
 
         if (s) {
@@ -254,8 +260,12 @@ class Colors {
 
     get browserConsoleArguments () /* LEGACY, DEPRECATED */ { return this.asChromeConsoleLogArguments }
 
-/*  Installs unsafe String extensions   */
-
+    /**
+     * @desc installs String prototype extensions
+     * @example
+     * require ('ansicolor').nice
+     * console.log ('foo'.bright.red)
+     */
     static get nice () {
 
         Colors.names.forEach (k => {
@@ -267,20 +277,27 @@ class Colors {
         return Colors
     }
 
-/*  Parsing front-end   */
-
+    /**
+     * @desc parses a string containing ANSI escape codes
+     * @return {Colors} parsed representation.
+     */
     static parse (s) {
         return new Colors (s).parsed
     }
 
-/*  Stripping   */
-
+    /**
+     * @desc strips ANSI codes from a string
+     * @param {string} s a string containing ANSI escape codes.
+     * @return {string} clean string.
+     */
     static strip (s) {
         return s.replace (/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g, '') // hope V8 caches the regexp
     }
 
-/*  Iteration protocol  */
-
+    /**
+     * @example
+     * const spans = [...ansi.parse ('\u001b[7m\u001b[7mfoo\u001b[7mbar\u001b[27m')]
+     */
     [Symbol.iterator] () {
         return this.spans[Symbol.iterator] ()
     }

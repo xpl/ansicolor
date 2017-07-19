@@ -1,0 +1,11 @@
+{
+   "source": "./",
+   "includes": ["^ansicolor.js$"],
+   "destination": "./doc",
+   "plugins": [{"name": "esdoc-node"}],
+   "test": {
+      "type": "mocha",
+      "source": "./",
+      "includes": ["^test.js$"]
+   }
+}
