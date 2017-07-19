@@ -11,14 +11,14 @@ npm install ansicolor
 ## What for
 
 - String coloring with ANSI escape codes
-- Solves the [style hierarchy problem](#why-another-one) (at which other similar tools fail)
+- Solves the [style hierarchy problem](#why-another-one) (where other similar tools fail)
 - Parsing/removing ANSI style data from strings
 - Converting ANSI styles to CSS or a Chrome DevTools-compatible output
 - A middleware for your [platform-agnostic logging system](https://github.com/xpl/ololog)
 
 ## Why another one?
 
-Other tools lack consistency, failing to solve the simple hierarchy problem:
+Other tools lack consistency, failing to solve a simple hierarchy problem:
 
 ```javascript
 require ('colors') // a popular color utility
@@ -28,7 +28,7 @@ console.log (('foo'.cyan + 'bar').red)
 
 ![pic](http://cdn.jpg.wtf/futurico/85/9b/1470626860-859b24350e22df74fd7497e9dc0d8d42.png)
 
-WTF, `bar` is not rendered red! It sucks. This is because ANSI codes are not hierarchical (as with XML/HTML), they're linear, and without some special magic nothing will work. **Ansicolor** does that magic for you:
+WTF?! The `bar` word above should be rendered in red, but it's not! It sucks. This is because ANSI codes are linear, not hierarchical (as with XML/HTML). A special kind of magic is needed to make this work. **Ansicolor** does that magic for you:
 
 ```javascript
 require ('ansicolor').nice // .nice for unsafe String extensions
@@ -60,7 +60,7 @@ console.log (ansi.underline.bright.green ('foo' + ansi.dim.red.bgBrightCyan ('ba
 ansi = require ('ansicolor').nice
 ```
 
-It adds styling APIs directly to the `String` prototype, setting something like a DSL for infix-style string coloring. Convenient, but unsafe: avoid use in public modules, as it pollutes global objects, causing potential hard-to-debug compatibility issues.
+The `('ansicolor').nice` export defines styling APIs on the `String` prototype directly. It uses an ad-hoc DSL (sort of) for infix-style string coloring. The `nice` is convenient, but is not safe, avoid using it in public modules, as it may alter global objects causing potential hard-to-debug compatibility issues.
 
 ```javascript
 console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
@@ -82,10 +82,10 @@ console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
 ```
 ```javascript
 'styles'
-    .bright.dim.italic.underline.inverse // italic may lack support on your platform
+    .bright.dim.italic.underline.inverse // your platform should support italic
 ```
 
-You also can read these method names programmatically:
+You also can use these method names programmatically:
 
 ```javascript
 ansi.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
@@ -99,13 +99,13 @@ ansi.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b
 
 ## Reading style information / CSS output
 
-Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that works not only in terminal, but in browsers too. Here's how you do it:
+Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that piece of code is available under command line interface and in a browser as well. Here's an example of how you would parse a colored string into an array-like structure. That structure can be traversed later to build HTML/JSON/XML or any other markup/syntax.
 
 ```javascript
 const parsed = ansi.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
 ```
 
-It will return a pseudo-array of styled spans, iterable with `for ... of` and convertable to an array with spread operator. There also exists `.spans` property for obtaining the actual array directly:
+The `ansi.parse ()` method will return a pseudo-array of styled spans, you can iterate it with a `for ... of` loop and convert it to an array with *spread operator*. Also, there's the `.spans` property for obtaining the already-spread array directly:
 
 ```javascript
 assert.deepEqual (parsed.spans /* or [...parsed] */,
@@ -154,7 +154,7 @@ ansi.rgbBright = {
 
 ## Chrome DevTools compatibility
 
-Some browsers support color logging with `console.log`, but they don't understand ANSI colors, implementing a proprietary CSS-based format instead. _Ansicolor_ can help you with converting styled strings to argument lists acceptable by Chrome's `console.log`:
+Web browsers usually implement their own proprietary CSS-based color formats for `console.log` and most of them fail to display standard ANSI colors. _Ansicolor_ offers you a helper method to convert ANSI-styled strings to browser-compatible argument lists acceptable by Chrome's `console.log`:
 
 ```javascript
 const string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
@@ -173,7 +173,7 @@ parsed.asChromeConsoleLogArguments // [ "%cfoo%cbar%cbaz",
                                    // ]
 ```
 
-You can even play with this feature online: [demo page](https://xpl.github.io/ansicolor/). Open the DevTools console and type expressions in the input box to see how it renders.
+Play with this feature online: [demo page](https://xpl.github.io/ansicolor/). Open the DevTools console and type expressions in the input box to see colored console output.
 
 Happy logging!
 
