@@ -124,7 +124,7 @@ assert.deepEqual (parsed.spans /* or [...parsed] */,
 
 ### Custom Color Themes
 
-You can change default RGB values:
+You can change default RGB values (this will currently work in Chrome only):
 
 ```javascript
 ansi.rgb = {
