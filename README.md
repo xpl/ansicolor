@@ -124,7 +124,7 @@ assert.deepEqual (parsed.spans /* or [...parsed] */,
 
 ### Custom Color Themes
 
-You can change default RGB values (won't work in terminals, affects only ANSI→CSS transformation part):
+You can change default RGB values (won't work in terminals, affects only the ANSI→CSS transformation part):
 
 ```javascript
 ansi.rgb = {
