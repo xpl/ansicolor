@@ -87,7 +87,7 @@
   "homepage": "https://xpl.github.io/ansicolor",
   "devDependencies": {
     "coveralls": "^2.13.1",
-    "esdoc": "^0.5.2",
+    "esdoc": "^1.0.1",
     "esdoc-node": "^1.0.2",
     "eslint": "^4.2.0",
     "istanbul": "^0.4.5",
