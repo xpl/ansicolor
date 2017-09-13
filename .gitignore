@@ -40,3 +40,6 @@ jspm_packages
 
 # ESDoc
 doc
+
+# VS Code
+settings.json

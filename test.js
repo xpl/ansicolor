@@ -26,13 +26,13 @@ describe ('ansicolor', () => {
 
     it ('works', () => {
 
-        same ('foo' + ansi.green (ansi.inverse (ansi.bgBrightCyan ('bar') + 'baz') + 'qux'),
+        same ('foo' + ansi.green (ansi.inverse (ansi.bgLightCyan ('bar') + 'baz') + 'qux'),
               'foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m')
     })
 
     it ('chaining works', () => {
 
-        same (ansi.underline.bright.green ('chai' + ansi.dim.red.bgBrightCyan ('ning')),
+        same (ansi.underline.bright.green ('chai' + ansi.dim.red.bgLightCyan ('ning')),
              '\u001b[4m\u001b[22m\u001b[1m\u001b[32mchai\u001b[22m\u001b[2m\u001b[31m\u001b[106mning\u001b[49m\u001b[32m\u001b[22m\u001b[1m\u001b[39m\u001b[22m\u001b[24m')
     })
 
@@ -56,7 +56,7 @@ describe ('ansicolor', () => {
 
         same (('foo'.cyan         + 'bar').red,         '\u001b[31m\u001b[36mfoo\u001b[31mbar\u001b[39m')
         same (('foo'.bgCyan       + 'bar').bgRed,       '\u001b[41m\u001b[46mfoo\u001b[41mbar\u001b[49m')
-        same (('foo'.bgBrightCyan + 'bar').bgBrightRed, '\u001b[101m\u001b[106mfoo\u001b[101mbar\u001b[49m')
+        same (('foo'.bgLightCyan  + 'bar').bgLightRed,  '\u001b[101m\u001b[106mfoo\u001b[101mbar\u001b[49m')
         same (('foo'.underline    + 'bar').underline,   '\u001b[4m\u001b[4mfoo\u001b[4mbar\u001b[24m')
 
         same (('foo'.bright  + 'bar').bright,   '\u001b[22m\u001b[1m\u001b[22m\u001b[1mfoo\u001b[22m\u001b[1mbar\u001b[22m')
@@ -66,7 +66,7 @@ describe ('ansicolor', () => {
 
     it ('basic parsing works', () => {
 
-        const parsed = ansi.parse ('foo'.bgBrightRed.bright.italic.underline + 'bar'.red.dim)
+        const parsed = ansi.parse ('foo'.bgLightRed.bright.italic.underline + 'bar'.red.dim)
 
         assert.deepEqual ([...parsed], parsed.spans)
 
@@ -77,7 +77,7 @@ describe ('ansicolor', () => {
                 bold: true,
                 underline: true,
                 color: { bright: true },
-                bgColor: { name: 'red', bright: true },
+                bgColor: { name: 'lightRed' },
                 text: 'foo',
                 code: { value: 49 } },
 
@@ -85,6 +85,17 @@ describe ('ansicolor', () => {
                 color: { name: 'red', dim: true },
                 text: 'bar',
                 code: { value: 39 } } ])
+    })
+
+    it ('brightness semantics (CSS)', () => {
+
+        const parsed = ansi.parse ('foo'.bright.red)
+
+        assert.deepEqual (parsed.spans,[ {  css: 'font-weight: bold;color:rgba(255,51,0,1);',
+                                            bold: true,
+                                            color: { name: 'red', bright: true },
+                                            text: 'foo',
+                                            code: { value: 22 } }])
     })
 
     it ('asChromeConsoleLogArguments works', () => {
@@ -116,47 +127,59 @@ describe ('ansicolor', () => {
     it ('color names enumeration works', () => {
 
         assert.deepEqual (ansi.names, [
-                                'black',
-                                'bgBlack',
-                                'bgBrightBlack',
-                                'red',
-                                'bgRed',
-                                'bgBrightRed',
-                                'green',
-                                'bgGreen',
-                                'bgBrightGreen',
-                                'yellow',
-                                'bgYellow',
-                                'bgBrightYellow',
-                                'blue',
-                                'bgBlue',
-                                'bgBrightBlue',
-                                'magenta',
-                                'bgMagenta',
-                                'bgBrightMagenta',
-                                'cyan',
-                                'bgCyan',
-                                'bgBrightCyan',
-                                'white',
-                                'bgWhite',
-                                'bgBrightWhite',
-                                'default',
-                                'bgDefault',
-                                'bgBrightDefault',
-                                'bright',
-                                'dim',
-                                'italic',
-                                'underline',
-                                'inverse'
-                            ])
+            'black',
+            'bgBlack',
+            'red',
+            'bgRed',
+            'green',
+            'bgGreen',
+            'yellow',
+            'bgYellow',
+            'blue',
+            'bgBlue',
+            'magenta',
+            'bgMagenta',
+            'cyan',
+            'bgCyan',
+            'lightGray',
+            'bgLightGray',
+            'default',
+            'bgDefault',
+            'darkGray',
+            'bgDarkGray',
+            'lightRed',
+            'bgLightRed',
+            'lightGreen',
+            'bgLightGreen',
+            'lightYellow',
+            'bgLightYellow',
+            'lightBlue',
+            'bgLightBlue',
+            'lightMagenta',
+            'bgLightMagenta',
+            'lightCyan',
+            'bgLightCyan',
+            'white',
+            'bgWhite',
+            'bgBrightRed',
+            'bgBrightGreen',
+            'bgBrightYellow',
+            'bgBrightBlue',
+            'bgBrightMagenta',
+            'bgBrightCyan',
+            'bright',
+            'dim',
+            'italic',
+            'underline',
+            'inverse'
+        ])
     })
 
-    it ('changing .rgb and .rgbBright works', () => {
+    it ('changing .rgb works', () => {
 
-        ansi.rgb.red       = [255,0,0]
-        ansi.rgbBright.red = [255,127,0]
+        ansi.rgb.red = [255,0,0]
 
-        assert.equal (ansi.parse ('foo'.red.bgBrightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,127,0,1);')
+        assert.equal (ansi.parse ('foo'.red.bgLightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,51,0,1);')
     })
 
     it ('type coercion works', () => {
@@ -180,6 +203,11 @@ describe ('ansicolor', () => {
 
         assert.equal (new ansi ('foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m').str,
                                 'foo\u001b[32m\u001b[7m\u001b[106mbar\u001b[49mbaz\u001b[27mqux\u001b[39m')
+    })
+
+    it ('compatible with previous versions where Light was called Bright in bg methods', () => {
+        
+        same ('foo'.bgLightCyan, 'foo'.bgBrightCyan)
     })
 })
 

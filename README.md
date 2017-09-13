@@ -48,10 +48,10 @@ Nice!
 ansi = require ('ansicolor')
 ```
 ```javascript
-console.log ('foo' + ansi.green (ansi.inverse (ansi.bgBrightCyan ('bar')) + 'baz') + 'qux')
+console.log ('foo' + ansi.green (ansi.inverse (ansi.bgLightCyan ('bar')) + 'baz') + 'qux')
 ```
 ```javascript
-console.log (ansi.underline.bright.green ('foo' + ansi.dim.red.bgBrightCyan ('bar'))) // method chaining
+console.log (ansi.underline.bright.green ('foo' + ansi.dim.red.bgLightCyan ('bar'))) // method chaining
 ```
 
 ### Nice Mode (by request)
@@ -70,25 +70,29 @@ console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
 
 ```javascript
 'foreground colors'
-    .black.red.green.yellow.blue.magenta.cyan.white
+    .red.green.yellow.blue.magenta.cyan.white.darkGray.black
+```
+```javascript
+'light foreground colors'
+    .lightRed.lightGreen.lightYellow.lightBlue.lightMagenta.lightCyan.lightGray
 ```
 ```javascript
 'background colors'
-    .bgBlack.bgRed.bgGreen.bgYellow.bgBlue.bgMagenta.bgCyan.bgWhite
+    .bgRed.bgGreen.bgYellow.bgBlue.bgMagenta.bgCyan.bgWhite.bgDarkGray.bgBlack
 ```
 ```javascript
-'bright background colors'
-    .bgBrightBlack.bgBrightRed.bgBrightGreen.bgBrightYellow.bgBrightBlue.bgBrightMagenta.bgBrightCyan.bgBrightWhite
+'light background colors'
+    .bgLightRed.bgLightGreen.bgLightYellow.bgLightBlue.bgLightMagenta.bgLightCyan.bgLightGray
 ```
 ```javascript
 'styles'
     .bright.dim.italic.underline.inverse // your platform should support italic
 ```
 
-You also can use these method names programmatically:
+You also can obtain all those style names (for reflection purposes):
 
 ```javascript
-ansi.names // [ 'black', 'bgBlack', 'bgBrightBlack', 'red', 'bgRed', ...
+ansi.names // ['red', 'green', ...
 ```
 
 ## Removing ANSI Styles From Strings
@@ -102,7 +106,7 @@ ansi.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b
 Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that piece of code is available under command line interface and in a browser as well. Here's an example of how you would parse a colored string into an array-like structure. That structure can be traversed later to build HTML/JSON/XML or any other markup/syntax.
 
 ```javascript
-const parsed = ansi.parse ('foo'.bgBrightRed.bright.italic + 'bar'.red.dim)
+const parsed = ansi.parse ('foo'.bgLightRed.bright.italic + 'bar'.red.dim)
 ```
 
 The `ansi.parse ()` method will return a pseudo-array of styled spans, you can iterate over it with a `for ... of` loop and convert it to an array with the *spread operator* (`...`). Also, there's the `.spans` property for obtaining the already-spread array directly:
@@ -114,7 +118,7 @@ assert.deepEqual (parsed.spans /* or [...parsed] */,
         italic: true,
         bold: true,
         color: { bright: true },
-        bgColor: { name: 'red', bright: true },
+        bgColor: { name: 'lightRed' },
         text: 'foo' },
 
       { css: 'color:rgba(204,0,0,0.5);',
@@ -129,26 +133,28 @@ You can change default RGB values (won't work in terminals, affects only the ANS
 ```javascript
 ansi.rgb = {
 
-    black:   [0,     0,   0],
-    red:     [204,   0,   0],
-    green:   [0,   204,   0],
-    yellow:  [204, 102,   0],
-    blue:    [0,     0, 255],
-    magenta: [204,   0, 204],
-    cyan:    [0,   153, 255],
-    white:   [255, 255, 255]
-}
+    black:        [0,     0,   0],    
+    darkGray:     [100, 100, 100],
+    lightGray:    [200, 200, 200],
+    white:        [255, 255, 255],
 
-ansi.rgbBright = {
-
-    black:   [0,     0,   0],
-    red:     [255,  51,   0],
-    green:   [51,  204,  51],
-    yellow:  [255, 153,  51],
-    blue:    [26,  140, 255],
-    magenta: [255,   0, 255],
-    cyan:    [0,   204, 255],
-    white:   [255, 255, 255]
+    red:          [204,   0,   0],
+    lightRed:     [255,  51,   0],
+    
+    green:        [0,   204,   0],
+    lightGreen:   [51,  204,  51],
+    
+    yellow:       [204, 102,   0],
+    lightYellow:  [255, 153,  51],
+    
+    blue:         [0,     0, 255],
+    lightBlue:    [26,  140, 255],
+    
+    magenta:      [204,   0, 204],
+    lightMagenta: [255,   0, 255],
+    
+    cyan:         [0,   153, 255],
+    lightCyan:    [0,   204, 255],
 }
 ```
 

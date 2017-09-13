@@ -4,22 +4,34 @@
 
 const O = Object
 
-/*  ------------------------------------------------------------------------ */
+/*  See https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    ------------------------------------------------------------------------ */
 
-const
+const colorCodes      = [   'black',      'red',      'green',      'yellow',      'blue',      'magenta',      'cyan', 'lightGray', '', 'default']
+    , colorCodesLight = ['darkGray', 'lightRed', 'lightGreen', 'lightYellow', 'lightBlue', 'lightMagenta', 'lightCyan', 'white', '']
+    
+    , styleCodes = ['', 'bright', 'dim', 'italic', 'underline', '', '', 'inverse']
 
-    colorCodes = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', '', 'default'],
-    styleCodes = ['', 'bright', 'dim', 'italic', 'underline', '', '', 'inverse'],
-
-    types = {   0:  'style',
+    , asBright = { 'red':       'lightRed',
+                   'green':     'lightGreen',
+                   'yellow':    'lightYellow',
+                   'blue':      'lightBlue',
+                   'magenta':   'lightMagenta',
+                   'cyan':      'lightCyan',
+                   'black':     'darkGray',
+                   'lightGray': 'white' }
+    
+    , types = { 0:  'style',
                 2:  'unstyle',
                 3:  'color',
+                9:  'colorLight',
                 4:  'bgColor',
-                10: 'bgColorBright' },
+                10: 'bgColorLight' }
 
-    subtypes = {    color:         colorCodes,
+    , subtypes = {  color:         colorCodes,
+                    colorLight:    colorCodesLight,
                     bgColor:       colorCodes,
-                    bgColorBright: colorCodes,
+                    bgColorLight:  colorCodesLight,
                     style:         styleCodes,
                     unstyle:       styleCodes    }
 
@@ -37,7 +49,7 @@ class Color {
     constructor (background, name, brightness) {
 
         this.background = background
-        this.name = name
+        this.name       = name
         this.brightness = brightness
     }
 
@@ -60,10 +72,11 @@ class Color {
 
         const color = inverted ? this.inverse : this
 
-        const prop = (color.background ? 'background:' : 'color:'),
-              rgb  = ((this.brightness === Code.bright) ? Colors.rgbBright : Colors.rgb)[color.name]
+        const rgbName = ((color.brightness === Code.bright) && asBright[color.name]) || color.name
 
-        const alpha = (this.brightness === Code.dim) ? 0.5 : 1
+        const prop = (color.background ? 'background:' : 'color:')
+            , rgb  = Colors.rgb[rgbName]
+            , alpha = (this.brightness === Code.dim) ? 0.5 : 1
 
         return rgb
                 ? (prop + 'rgba(' + [...rgb, alpha].join (',') + ');')
@@ -111,8 +124,6 @@ O.assign (Code, {
 
 /*  ------------------------------------------------------------------------ */
 
-const camel = (a, b) => a + b.charAt (0).toUpperCase () + b.slice (1)
-
 const replaceAll = (str, a, b) => str.split (a).join (b)
 
 /*  ANSI brightness codes do not overlap, e.g. "{bright}{dim}foo" will be rendered bright (not dim).
@@ -136,15 +147,30 @@ const wrap = (x, openCode, closeCode) => {
 
 /*  ------------------------------------------------------------------------ */
 
+const camel = (a, b) => a + b.charAt (0).toUpperCase () + b.slice (1)
+
+
 const stringWrappingMethods = (() => [
 
         ...colorCodes.map ((k, i) => !k ? [] : [ // color methods
 
-            [k,                     30 + i,  Code.noColor],
-            [camel ('bg', k),       40 + i,  Code.noBgColor],
-            [camel ('bgBright', k), 100 + i, Code.noBgColor]
+            [k,               30 + i, Code.noColor],
+            [camel ('bg', k), 40 + i, Code.noBgColor],
         ]),
 
+        ...colorCodesLight.map ((k, i) => !k ? [] : [ // light color methods
+            
+            [k,                90 + i, Code.noColor],
+            [camel ('bg', k), 100 + i, Code.noBgColor],
+        ]),
+
+        /* THIS ONE IS FOR BACKWARDS COMPATIBILITY WITH PREVIOUS VERSIONS (had 'bright' instead of 'light' for backgrounds)
+         */
+        ...['', 'BrightRed', 'BrightGreen', 'BrightYellow', 'BrightBlue', 'BrightMagenta', 'BrightCyan'].map ((k, i) => !k ? [] : [
+            
+            ['bg' + k, 100 + i, Code.noBgColor],
+        ]),
+        
         ...styleCodes.map ((k, i) => !k ? [] : [ // style methods
 
             [k, i, ((k === 'bright') || (k === 'dim')) ? Code.noBrightness : (20 + i)]
@@ -219,9 +245,9 @@ class Colors {
                 const foreColor = color.defaultBrightness (brightness)
 
                 const styledSpan = O.assign (
-                                    { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },
+                                        { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },
                                         clean ({ bold: !!bold, color: foreColor.clean, bgColor: bgColor.clean }),
-                                            span)
+                                        span)
 
                 for (const k of styles) { styledSpan[k] = true }
 
@@ -233,9 +259,11 @@ class Colors {
 
                     switch (span.code.type) {
 
-                        case 'color'        : color   = new Color (false, c.subtype);              break
-                        case 'bgColor'      : bgColor = new Color (true,  c.subtype);              break
-                        case 'bgColorBright': bgColor = new Color (true,  c.subtype, Code.bright); break
+                        case 'color'        :
+                        case 'colorLight'   : color   = new Color (false, c.subtype); break
+
+                        case 'bgColor'      :
+                        case 'bgColorLight' : bgColor = new Color (true,  c.subtype); break
 
                         case 'style'  : styles.add    (c.subtype); break
                         case 'unstyle': styles.delete (c.subtype); break
@@ -315,26 +343,28 @@ Colors.names = stringWrappingMethods.map (([k]) => k)
 
 Colors.rgb = {
 
-    black:   [0,     0,   0],
-    red:     [204,   0,   0],
-    green:   [0,   204,   0],
-    yellow:  [204, 102,   0],
-    blue:    [0,     0, 255],
-    magenta: [204,   0, 204],
-    cyan:    [0,   153, 255],
-    white:   [255, 255, 255]
-}
+    black:        [0,     0,   0],    
+    darkGray:     [100, 100, 100],
+    lightGray:    [200, 200, 200],
+    white:        [255, 255, 255],
 
-Colors.rgbBright = {
-
-    black:   [0,     0,   0],
-    red:     [255,  51,   0],
-    green:   [51,  204,  51],
-    yellow:  [255, 153,  51],
-    blue:    [26,  140, 255],
-    magenta: [255,   0, 255],
-    cyan:    [0,   204, 255],
-    white:   [255, 255, 255]
+    red:          [204,   0,   0],
+    lightRed:     [255,  51,   0],
+    
+    green:        [0,   204,   0],
+    lightGreen:   [51,  204,  51],
+    
+    yellow:       [204, 102,   0],
+    lightYellow:  [255, 153,  51],
+    
+    blue:         [0,     0, 255],
+    lightBlue:    [26,  140, 255],
+    
+    magenta:      [204,   0, 204],
+    lightMagenta: [255,   0, 255],
+    
+    cyan:         [0,   153, 255],
+    lightCyan:    [0,   204, 255],
 }
 
 /*  ------------------------------------------------------------------------ */
