@@ -1,8 +1,25 @@
 language: node_js
 node_js:
-  - "node"
+- '4'
 script:
-  - npm run lint
-  - npm run lint-test
-  - npm test
-after_success: npm run coverage
+- set -e
+- npm run test
+- npm run coveralls
+after_success:
+- git config --global user.email "travis@travis-ci.org"
+- git config --global user.name "Travis CI"
+- npm config set git-tag-version=false
+- NPM_VERSION=$(npm version patch)
+- git commit -a -m "${NPM_VERSION:1}" -m "[ci skip]"
+- git remote remove origin
+- git remote add origin https://${GITHUB_TOKEN}@github.com/xpl/ansicolor.git
+- git push origin HEAD:master
+deploy:
+  provider: npm
+  email: rocket.mind@gmail.com
+deploy:
+  api_key:
+    secure: hKSYXC2WPXd0xRClWP3rcYMh8ZLgJsSfcfV26Z0aJtgSAFJdlptRVnH/hWG7ogJ+Xvy4qHN/XkFOkkic3Gl17/2jZGmMN6nKB6rBwxsU1jQIyVwGcwxAw6fXg4aBkXGj+GZ/G/r30fe/e2mAZK/KNG/tayv1diT6NlvMYboTBxzOJdksiS5uciHt2VJtqGFrDUjR/Bk7lS1LDNqrOtmaYCcmtJZColhUZTV1bTenk0TFw9XnYTJ9sV87hjKIbAV/0xuCRHkeMOGKjGcvjlOqMXx5gn/V129veIr4cx9vWYGGqBw0WQuZygTXcfDZj0FI8GKxSsfDNznIk5tsSTO+4nqR9/wLsRtgGqsuKAzfLRVxPswaI21gECbDYAGhihNSB18k0+pGZsSzyQp/H38vT6fbev8zEZapF5dMqQr9tl1xLe4yefrQoBBPHQ5QBsG3sED0T7Xo1wVd5O9eqAa59MF0r7m2p1ZZoG7mFgb8Y02OapJvYWSFT0SqftwLgGoJHtEl4EojnIaRCy1dABh2/lKu6WfGe1QOpyZthzVW37z/tklvXDl+k/2KteX777ibWqwSB2BlUbKlcXfYty+A5Ve1EBaSm0oQc1tFbX0BwGVpZeDJqzEFwbzpQyDGzrviB8WGSKESyl2oCFDAuDaboWw9PRYMQSd6zZcyK8Veki8=
+env:
+  global:
+    secure: YuhrrvrLXIEOM5DEKZl7V5jS+TaIwkeHwCOe8rZCPIe3s19IA3F5ryvWzUGatFKgr2HuBfd1ls8La3aOOmiSiMQNYGdDOG445VnHIEvK+bi4nXvpa7FPQN3Vsb8p3Z0BhJe446nc6yR5dRDSygA5OVmYKkgZ6LOMslLetejqI2KsZo0I0dbvk+RzMMbENYvswANEn+xiST0uMS2pW07lINrCb2yn3rKaLuNx/peE3LnD7t4pfIjzHmDHfsh1/6/3QOe7jSoYzJE+TkDP21ft83AKX/EFGJ9/Kgr2Fk9Fal9fUJshwSNuiBSeZktVkZ+W2/mNZl7WbwM7Lf2sGAklSemW8z3lukJbRtgn6HZqG1bO6wEDlqAEN/QT0oynI1Z9hKdrriCWpbbgh3uMT1jTT/mWCM+EnIK43xuAJLXep6mzH9s879ZWGSuAhEiig57SR4PBHjZFD1rEdDjOoxe7YcrsNPhB57WNFEGuahIWpqMiBbhoSKJyihTadgE5JtgEP7UmtVJdJx/NrREChNRm/DZJjwTBZuYrA15hf9ipinVzTGgi5gXlffRqfwTYEZI2FMT1lT3AGdOoKw764MO6FdFb5Bm3mVFNmTH3q5mv9OuVi9eYh7DdBmSWa7EGnUpd2vp6c/HNHEJusgSVNAOVpogvs0+ilvz2DRxd8X60H4s=

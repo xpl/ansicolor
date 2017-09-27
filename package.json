@@ -2,14 +2,15 @@
   "name": "ansicolor",
   "version": "1.1.68",
   "description": "The final solution to the ANSI color/style management. Works in browsers!",
-  "main": "ansicolor.js",
+  "main": "./build/ansicolor.js",
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text mocha --reporter spec",
     "lint": "eslint ansicolor.js",
     "lint-test": "eslint test.js",
-    "doc": "esdoc -c esdoc.json",
+    "babel": "babel ansicolor.js --source-maps inline --out-file ./build/ansicolor.js",
+    "build": "npm run lint && npm run lint-test && npm run babel",
+    "test": "npm run build && nyc --reporter=html --reporter=text mocha --reporter spec",
     "autotest": "mocha --reporter spec --watch",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
@@ -86,9 +87,11 @@
   },
   "homepage": "https://xpl.github.io/ansicolor",
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-es2015-destructuring": "^6.23.0",
+    "babel-plugin-transform-es2015-parameters": "^6.24.1",
+    "babel-plugin-transform-es2015-spread": "^6.22.0",
     "coveralls": "^2.13.1",
-    "esdoc": "^1.0.1",
-    "esdoc-node": "^1.0.2",
     "eslint": "^4.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.4.2",
