@@ -91,10 +91,10 @@
     "babel-plugin-transform-es2015-destructuring": "^6.23.0",
     "babel-plugin-transform-es2015-parameters": "^6.24.1",
     "babel-plugin-transform-es2015-spread": "^6.22.0",
-    "coveralls": "^2.13.3",
-    "eslint": "^4.8.0",
+    "coveralls": "^3.0.2",
+    "eslint": "^4.19.1",
     "istanbul": "^0.4.5",
-    "mocha": "^3.5.3",
-    "nyc": "^11.2.1"
+    "mocha": "^5.2.0",
+    "nyc": "^11.9.0"
   }
 }
