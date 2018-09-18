@@ -171,10 +171,10 @@ ansi.rgb = {
 Web browsers usually implement their own proprietary CSS-based color formats for `console.log` and most of them fail to display standard ANSI colors. _Ansicolor_ offers you a helper method to convert ANSI-styled strings to browser-compatible argument lists acceptable by Chrome's `console.log`:
 
 ```javascript
-const { parse } = require ('ansicolor')
+const { bgGreen, red, parse } = require ('ansicolor')
 
-const string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
-const parsed = ansi.parse (string)
+const string = 'foo' + bgGreen (red.underline.bright.inverse ('bar') + 'baz')
+const parsed = parse (string)
 
 console.log (...parsed.asChromeConsoleLogArguments) // prints with colors in Chrome!
 ```
