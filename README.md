@@ -57,7 +57,7 @@ console.log (underline.bright.green ('foo' + dim.red.bgLightCyan ('bar'))) // me
 ### Nice Mode
 
 ```javascript
-ansi = require ('ansicolor').nice
+const ansi = require ('ansicolor').nice
 ```
 
 The `('ansicolor').nice` export defines styling APIs on the `String` prototype directly. It uses an ad-hoc DSL (sort of) for infix-style string coloring. The `nice` is convenient, but not safe, avoid using it in public modules, as it may alter global objects causing potential hard-to-debug compatibility issues.
