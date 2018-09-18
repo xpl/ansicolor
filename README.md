@@ -42,19 +42,19 @@ Nice!
 
 ## Crash Course
 
-### Safe Mode (default)
+### Safe Mode (recommended)
 
 ```javascript
-ansi = require ('ansicolor')
+const { green, inverse, bgLightCyan, underline, dim } = require ('ansicolor')
 ```
 ```javascript
-console.log ('foo' + ansi.green (ansi.inverse (ansi.bgLightCyan ('bar')) + 'baz') + 'qux')
+console.log ('foo' + green (inverse (bgLightCyan ('bar')) + 'baz') + 'qux')
 ```
 ```javascript
-console.log (ansi.underline.bright.green ('foo' + ansi.dim.red.bgLightCyan ('bar'))) // method chaining
+console.log (underline.bright.green ('foo' + dim.red.bgLightCyan ('bar'))) // method chaining
 ```
 
-### Nice Mode (by request)
+### Nice Mode
 
 ```javascript
 ansi = require ('ansicolor').nice
@@ -92,13 +92,17 @@ console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
 You also can obtain all those style names (for reflection purposes):
 
 ```javascript
-ansi.names // ['red', 'green', ...
+const { names } = require ('ansicolor')
+
+names // ['red', 'green', ...
 ```
 
 ## Removing ANSI Styles From Strings
 
 ```javascript
-ansi.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
+const { strip } = require ('ansicolor')
+
+strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
 ```
 
 ## Converting to CSS/HTML
@@ -106,7 +110,9 @@ ansi.strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b
 Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that piece of code is available under command line interface and in a browser as well. Here's an example of how you would parse a colored string into an array-like structure. That structure can be traversed later to build HTML/JSON/XML or any other markup/syntax.
 
 ```javascript
-const parsed = ansi.parse ('foo'.bgLightRed.bright.italic + 'bar'.red.dim)
+const { parse } = require ('ansicolor')
+
+const parsed = parse ('foo'.bgLightRed.bright.italic + 'bar'.red.dim)
 ```
 
 The `ansi.parse ()` method will return a pseudo-array of styled spans, you can iterate over it with a `for ... of` loop and convert it to an array with the *spread operator* (`...`). Also, there's the `.spans` property for obtaining the already-spread array directly:
@@ -131,6 +137,8 @@ assert.deepEqual (parsed.spans /* or [...parsed] */,
 You can change default RGB values (won't work in terminals, affects only the ANSI→CSS transformation part):
 
 ```javascript
+const ansi = require ('ansicolor')
+
 ansi.rgb = {
 
     black:        [0,     0,   0],    
@@ -163,6 +171,8 @@ ansi.rgb = {
 Web browsers usually implement their own proprietary CSS-based color formats for `console.log` and most of them fail to display standard ANSI colors. _Ansicolor_ offers you a helper method to convert ANSI-styled strings to browser-compatible argument lists acceptable by Chrome's `console.log`:
 
 ```javascript
+const { parse } = require ('ansicolor')
+
 const string = 'foo' + ('bar'.red.underline.bright.inverse + 'baz').bgGreen
 const parsed = ansi.parse (string)
 
