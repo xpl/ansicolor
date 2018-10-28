@@ -111,6 +111,7 @@ class Code {
 
 O.assign (Code, {
 
+    reset:        0,
     bright:       1,
     dim:          2,
     inverse:      7,
@@ -226,10 +227,17 @@ class Colors {
 
     get parsed () {
 
-        var color      = new Color (),
+        let color, bgColor, brightness, styles
+
+        function reset () {
+
+            color      = new Color (),
             bgColor    = new Color (true /* background */),
             brightness = undefined,
             styles     = new Set ()
+        }
+
+        reset ()
 
         return O.assign (new Colors (), {
 
@@ -257,16 +265,22 @@ class Colors {
                 
                 } else {
 
-                    switch (span.code.type) {
+                    if (span.code.value === Code.reset) {
+                        reset ()
+                        
+                    } else {
 
-                        case 'color'        :
-                        case 'colorLight'   : color   = new Color (false, c.subtype); break
+                        switch (span.code.type) {
 
-                        case 'bgColor'      :
-                        case 'bgColorLight' : bgColor = new Color (true,  c.subtype); break
+                            case 'color'        :
+                            case 'colorLight'   : color   = new Color (false, c.subtype); break
 
-                        case 'style'  : styles.add    (c.subtype); break
-                        case 'unstyle': styles.delete (c.subtype); break
+                            case 'bgColor'      :
+                            case 'bgColorLight' : bgColor = new Color (true,  c.subtype); break
+
+                            case 'style'  : styles.add    (c.subtype); break
+                            case 'unstyle': styles.delete (c.subtype); break
+                        }
                     }
                 }
 

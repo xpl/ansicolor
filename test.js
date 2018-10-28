@@ -3,7 +3,7 @@
 /*  ------------------------------------------------------------------------ */
 
 const assert = require ('assert'),
-      ansi   = require ('./build/ansicolor').nice
+      ansi   = require (process.env.ANSICOLOR_MODULE).nice
 
 /*  ------------------------------------------------------------------------ */
 
@@ -209,6 +209,22 @@ describe ('ansicolor', () => {
     it ('compatible with previous versions where Light was called Bright in bg methods', () => {
         
         same ('foo'.bgLightCyan, 'foo'.bgBrightCyan)
+    })
+
+    it ('reset code works', () => {
+
+        assert.deepEqual (ansi.parse ('\u001b[1m\u001b[31mbold_red\u001b[0mreset').spans,
+
+            [ { css: 'font-weight: bold;color:rgba(255,51,0,1);',
+                bold: true,
+                color: { name: 'red', bright: true },
+                text: 'bold_red',
+                code: { value: 0 } },
+
+              { css: '',
+                text: 'reset',
+                code: {} }
+        ])
     })
 })
 
