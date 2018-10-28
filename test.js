@@ -232,9 +232,7 @@ describe ('ansicolor', () => {
 
     it ('combined codes work', () => {
 
-        const { parse } = ansi
-
-        assert.deepEqual (parse ('\u001b[2;31mfoo🕵️‍bar\u001b[0mbaz').spans,
+        assert.deepEqual (ansi.parse ('\u001b[2;31mfoo🕵️‍bar\u001b[0mbaz').spans,
 
             [ { css: 'color:rgba(204,0,0,0.5);',
                 color: { name: 'red', dim: true },
@@ -245,11 +243,9 @@ describe ('ansicolor', () => {
 
     it ('broken codes do not parse', () => {
 
-        const { parse } = ansi
-
-        assert.equal (parse ('\u001b2;31mfoo').spans[0].text, '\u001b2;31mfoo')
-        assert.equal (parse ('\u001b[2;xmfoo').spans[0].text, '\u001b[2;xmfoo')
-        assert.equal (parse ('\u001b[0').spans[0].text, '\u001b[0')
+        assert.equal (ansi.parse ('\u001b2;31mfoo').spans[0].text, '\u001b2;31mfoo')
+        assert.equal (ansi.parse ('\u001b[2;xmfoo').spans[0].text, '\u001b[2;xmfoo')
+        assert.equal (ansi.parse ('\u001b[0').spans[0].text, '\u001b[0')
     })
 
     it ('changing .rgb works', () => {
