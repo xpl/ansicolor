@@ -194,6 +194,54 @@ const assignStringWrappingAPI = (target, wrapBefore = target) =>
 
 /*  ------------------------------------------------------------------------ */
 
+const TEXT    = 0,
+      BRACKET = 1,
+      CODE    = 2
+
+function rawParse (s) {
+    
+    let state = TEXT, buffer = '', text = '', code = '', codes = []
+    let spans = []
+
+    for (let i = 0, n = s.length; i < n; i++) {
+
+        const c = s[i]
+
+        buffer += c
+
+        switch (state) {
+
+            case TEXT:
+                if (c === '\u001b') { state = BRACKET; buffer = c; }
+                else                { text += c }
+                break
+
+            case BRACKET:
+                if (c === '[') { state = CODE; code = ''; codes = [] }
+                else           { state = TEXT; text += buffer }
+                break
+
+            case CODE:
+
+                if ((c >= '0') && (c <= '9'))        { code += c }
+                else if (c === ';')                  { codes.push (new Code (code)); code = '' }
+                else if ((c === 'm') && code.length) { codes.push (new Code (code))
+                                                       for (const code of codes) { spans.push ({ text, code }); text = '' }
+                                                       state = TEXT
+                                                     }
+                else                                 { state = TEXT; text += buffer }
+        }
+    }
+
+    if (state !== TEXT) text += buffer
+
+    if (text) spans.push ({ text, code: new Code () })
+
+    return spans
+}
+
+/*  ------------------------------------------------------------------------ */
+
 /**
  * Represents an ANSI-escaped string.
  */
@@ -204,21 +252,7 @@ class Colors {
      */
     constructor (s) {
 
-        if (s) {
-
-            const r = /\u001b\[(\d+)m/g
-
-            const spans = s.split (/\u001b\[\d+m/)
-            const codes = []
-
-            for (let match; match = r.exec (s);) codes.push (match[1])
-
-            this.spans = spans.map ((s, i) => ({ text: s, code: new Code (codes[i]) })) 
-        }
-
-        else {
-            this.spans = []
-        }
+        this.spans = s ? rawParse (s) : []
     }
 
     get str () {
@@ -263,11 +297,11 @@ class Colors {
 
                     brightness = c.value
                 
-                } else {
+                } else if (span.code.value !== undefined) {
 
                     if (span.code.value === Code.reset) {
                         reset ()
-                        
+
                     } else {
 
                         switch (span.code.type) {

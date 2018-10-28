@@ -176,13 +176,6 @@ describe ('ansicolor', () => {
         ])
     })
 
-    it ('changing .rgb works', () => {
-
-        ansi.rgb.red = [255,0,0]
-
-        assert.equal (ansi.parse ('foo'.red.bgLightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,51,0,1);')
-    })
-
     it ('type coercion works', () => {
 
         assert.equal (ansi.red (123), ansi.red ('123'))
@@ -197,7 +190,7 @@ describe ('ansicolor', () => {
 
         same ('bgRed.inverse'.bgRed.inverse, '\u001b[7m\u001b[41mbgRed.inverse\u001b[49m\u001b[27m')
 
-        assert.equal (ansi.parse ('foo'.bgRed.inverse).spans[0].css, 'background:rgba(255,255,255,1);color:rgba(255,0,0,1);')
+        assert.equal (ansi.parse ('foo'.bgRed.inverse).spans[0].css, 'background:rgba(255,255,255,1);color:rgba(204,0,0,1);')
     })
 
     it ('.str works', () => {
@@ -225,6 +218,45 @@ describe ('ansicolor', () => {
                 text: 'reset',
                 code: {} }
         ])
+    })
+
+    it ('parsing a string with no codes', () => {
+
+        assert.deepEqual (ansi.parse ('foobar').spans,
+
+            [ { css: '',
+                text: 'foobar',
+                code: {} }
+        ])
+    })
+
+    it ('combined codes work', () => {
+
+        const { parse } = ansi
+
+        assert.deepEqual (parse ('\u001b[2;31mfoo🕵️‍bar\u001b[0mbaz').spans,
+
+            [ { css: 'color:rgba(204,0,0,0.5);',
+                color: { name: 'red', dim: true },
+                text: 'foo🕵️‍bar',
+                code: { value: 0 } },
+              { css: '', text: 'baz', code: {} } ])
+    })
+
+    it ('broken codes do not parse', () => {
+
+        const { parse } = ansi
+
+        assert.equal (parse ('\u001b2;31mfoo').spans[0].text, '\u001b2;31mfoo')
+        assert.equal (parse ('\u001b[2;xmfoo').spans[0].text, '\u001b[2;xmfoo')
+        assert.equal (parse ('\u001b[0').spans[0].text, '\u001b[0')
+    })
+
+    it ('changing .rgb works', () => {
+
+        ansi.rgb.red = [255,0,0]
+
+        assert.equal (ansi.parse ('foo'.red.bgLightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,51,0,1);')
     })
 })
 
