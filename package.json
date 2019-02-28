@@ -8,8 +8,7 @@
     "lint-test": "eslint test.js",
     "babel": "babel ansicolor.js --source-maps inline --out-file ./build/ansicolor.js",
     "build": "npm run lint && npm run lint-test && npm run babel",
-    "test": "nyc --reporter=html --reporter=text env ANSICOLOR_MODULE='./build/ansicolor' mocha --reporter spec",
-    "build-and-test": "npm run build && npm run test",
+    "test": "npm run build && nyc --reporter=html --reporter=text env ANSICOLOR_MODULE='./build/ansicolor' mocha --reporter spec",
     "autotest": "env ANSICOLOR_MODULE='./ansicolor' mocha --reporter spec --watch",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
