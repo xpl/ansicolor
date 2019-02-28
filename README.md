@@ -197,5 +197,5 @@ Happy logging!
 
 - [**Ololog!**](https://github.com/xpl/ololog) — a better `console.log` for the log-driven debugging junkies
 - [**CCXT**](https://github.com/ccxt/ccxt) — a cryptocurrency trading API with 130+ exchanges
-- [**Graphana**](https://github.com/grafana/grafana) — beautiful monitoring & metric analytics & dashboards
+- [**Grafana**](https://github.com/grafana/grafana) — beautiful monitoring & metric analytics & dashboards
 
