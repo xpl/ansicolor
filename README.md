@@ -193,6 +193,9 @@ Play with this feature online: [demo page](https://xpl.github.io/ololog/). Open 
 
 Happy logging!
 
-## See Also
+## Projects That Use `ansicolor`
 
-- [Ololog!](https://github.com/xpl/ololog)
+- [**Ololog!**](https://github.com/xpl/ololog) — a better `console.log` for the log-driven debugging junkies
+- [**CCXT**](https://github.com/ccxt/ccxt) — a cryptocurrency trading API with 130+ exchanges
+- [**Graphana**](https://github.com/grafana/grafana) — beautiful monitoring & metric analytics & dashboards
+
