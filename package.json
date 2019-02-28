@@ -1,6 +1,6 @@
 {
   "name": "ansicolor",
-  "version": "1.1.80",
+  "version": "1.1.81",
   "description": "A JavaScript ANSI color/style management. ANSI parsing. ANSI to CSS. Small, clean, no dependencies.",
   "main": "./build/ansicolor.js",
   "scripts": {
