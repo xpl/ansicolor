@@ -3,6 +3,7 @@
   "version": "1.1.81",
   "description": "A JavaScript ANSI color/style management. ANSI parsing. ANSI to CSS. Small, clean, no dependencies.",
   "main": "./build/ansicolor.js",
+  "types": "./ansicolor.d.ts",
   "scripts": {
     "lint": "eslint ansicolor.js",
     "lint-test": "eslint test.js",
