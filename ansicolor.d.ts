@@ -49,55 +49,57 @@ declare interface RGBValues {
 
 declare interface ansicolor {
 
+    (text: string): string; // applies the style to the string
+
     nice: ansicolor; // installs unsafe String extensions when accessed
     rgb: RGBValues;  // RGB color schema
 
     parse (text: string): AnsiColored;
     strip (text: string): string;
 
-    default (text: string): string;
-    white (text: string): string;
-    black (text: string): string;
-    red (text: string): string;
-    green (text: string): string;
-    yellow (text: string): string;
-    blue (text: string): string;
-    magenta (text: string): string;
-    cyan (text: string): string;
+    default: ansicolor;
+    white: ansicolor;
+    black: ansicolor;
+    red: ansicolor;
+    green: ansicolor;
+    yellow: ansicolor;
+    blue: ansicolor;
+    magenta: ansicolor;
+    cyan: ansicolor;
 
-    darkGray (text: string): string;
-    lightGray (text: string): string;
-    lightRed (text: string): string;
-    lightGreen (text: string): string;
-    lightYellow (text: string): string;
-    lightBlue (text: string): string;
-    lightMagenta (text: string): string;
-    lightCyan (text: string): string;
+    darkGray: ansicolor;
+    lightGray: ansicolor;
+    lightRed: ansicolor;
+    lightGreen: ansicolor;
+    lightYellow: ansicolor;
+    lightBlue: ansicolor;
+    lightMagenta: ansicolor;
+    lightCyan: ansicolor;
 
-    bright (text: string): string;
-    dim (text: string): string;
-    italic (text: string): string;
-    underline (text: string): string;
-    inverse (text: string): string;
+    bright: ansicolor;
+    dim: ansicolor;
+    italic: ansicolor;
+    underline: ansicolor;
+    inverse: ansicolor;
 
-    bgDefault (text: string): string;
-    bgWhite (text: string): string;
-    bgBlack (text: string): string;
-    bgRed (text: string): string;
-    bgGreen (text: string): string;
-    bgYellow (text: string): string;
-    bgBlue (text: string): string;
-    bgMagenta (text: string): string;
-    bgCyan (text: string): string;
+    bgDefault: ansicolor;
+    bgWhite: ansicolor;
+    bgBlack: ansicolor;
+    bgRed: ansicolor;
+    bgGreen: ansicolor;
+    bgYellow: ansicolor;
+    bgBlue: ansicolor;
+    bgMagenta: ansicolor;
+    bgCyan: ansicolor;
 
-    bgDarkGray (text: string): string;
-    bgLightGray (text: string): string;
-    bgLightRed (text: string): string;
-    bgLightGreen (text: string): string;
-    bgLightYellow (text: string): string;
-    bgLightBlue (text: string): string;
-    bgLightMagenta (text: string): string;
-    bgLightCyan (text: string): string;
+    bgDarkGray: ansicolor;
+    bgLightGray: ansicolor;
+    bgLightRed: ansicolor;
+    bgLightGreen: ansicolor;
+    bgLightYellow: ansicolor;
+    bgLightBlue: ansicolor;
+    bgLightMagenta: ansicolor;
+    bgLightCyan: ansicolor;
 }
 
 declare const ansicolor: ansicolor
