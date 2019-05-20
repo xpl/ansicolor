@@ -14,11 +14,11 @@ declare interface ParsedSpan {
     bgColor?: ParsedColor;
 }
 
-declare class AnsiColored extends Iterator<ParsedSpan> {
-
-    get spans (): ParsedSpan[];
-    get str (): string;
-    get asChromeConsoleLogArguments (): string[];
+declare interface AnsiColored extends Iterator<ParsedSpan> {
+    
+    readonly spans: ParsedSpan[];
+    readonly str: string;
+    readonly asChromeConsoleLogArguments: string[];
 }
 
 declare interface RGBValues {
