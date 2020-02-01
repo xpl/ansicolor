@@ -377,6 +377,15 @@ class Colors {
     [Symbol.iterator] () {
         return this.spans[Symbol.iterator] ()
     }
+
+    /**
+     * @desc This allows an alternative import style, see https://github.com/xpl/ansicolor/issues/7#issuecomment-578923578
+     * @example
+     * import { ansicolor, ParsedSpan } from 'ansicolor'
+     */
+    static get ansicolor () {
+        return Colors
+    }
 }
 
 /*  ------------------------------------------------------------------------ */

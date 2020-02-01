@@ -42,11 +42,17 @@ Nice!
 
 ## Crash Course
 
-### Safe Mode (recommended)
+Importing (as methods):
 
+```javascript
+import { green, inverse, bgLightCyan, underline, dim } from 'ansicolor'
+```
 ```javascript
 const { green, inverse, bgLightCyan, underline, dim } = require ('ansicolor')
 ```
+
+Usage:
+
 ```javascript
 console.log ('foo' + green (inverse (bgLightCyan ('bar')) + 'baz') + 'qux')
 ```
@@ -54,13 +60,22 @@ console.log ('foo' + green (inverse (bgLightCyan ('bar')) + 'baz') + 'qux')
 console.log (underline.bright.green ('foo' + dim.red.bgLightCyan ('bar'))) // method chaining
 ```
 
-### Nice Mode
+Importing (as object):
+
+```javascript
+import { ansicolor, ParsedSpan } from 'ansicolor' // along with type definitions
+```
+```javascript
+import ansicolor from 'ansicolor'
+```
+
+### Nice Mode (not recommended)
 
 ```javascript
 const ansi = require ('ansicolor').nice
 ```
 
-The `('ansicolor').nice` export defines styling APIs on the `String` prototype directly. It uses an ad-hoc DSL (sort of) for infix-style string coloring. The `nice` is convenient, but not safe, avoid using it in public modules, as it may alter global objects causing potential hard-to-debug compatibility issues.
+The `('ansicolor').nice` export defines styling APIs on the `String` prototype directly. It uses an ad-hoc DSL (sort of) for infix-style string coloring. The `nice` is convenient, but not safe, avoid using it in public modules, as it alters global objects, and that might cause potential hard-to-debug compatibility issues.
 
 ```javascript
 console.log ('foo'.red.bright + 'bar'.bgYellow.underline.dim)
