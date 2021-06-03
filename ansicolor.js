@@ -426,7 +426,9 @@ Colors.rgb = {
 
 /*  ------------------------------------------------------------------------ */
 
-module.exports = Colors
+// Named exports
+const ColorEntries = Object.getOwnPropertyNames(Colors).map(s => [s, Colors[s]])
+module.exports = Object.assign({ default: Colors }, Object.fromEntries(ColorEntries))
 
 /*  ------------------------------------------------------------------------ */
 
