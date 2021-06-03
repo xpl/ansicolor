@@ -17,6 +17,10 @@
     "type": "git",
     "url": "https://github.com/xpl/ansicolor.git"
   },
+  "exports": {
+    "import": "./build/ansicolor.mjs",
+    "require": "./build/ansicolor.js"
+  },
   "keywords": [
     "ANSI",
     "ansi to css",
