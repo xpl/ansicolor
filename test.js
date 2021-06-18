@@ -204,7 +204,7 @@ describe ('ansicolor', () => {
         same ('foo'.bgLightCyan, 'foo'.bgBrightCyan)
     })
 
-    it ('reset code works', () => {
+    it ('explicit reset code works', () => {
 
         assert.deepEqual (ansi.parse ('\u001b[1m\u001b[31mbold_red\u001b[0mreset').spans,
 
@@ -218,6 +218,22 @@ describe ('ansicolor', () => {
                 text: 'reset',
                 code: {} }
         ])
+    })
+
+    it ('implicit reset code works', () => {
+
+        assert.deepEqual (ansi.parse ('\u001b[1m\u001b[31mbold_red\u001b[mreset').spans,
+
+            [ { css: 'font-weight: bold;color:rgba(255,51,0,1);',
+                bold: true,
+                color: { name: 'red', bright: true },
+                text: 'bold_red',
+                code: { value: 0 } },
+
+                { css: '',
+                    text: 'reset',
+                    code: {} }
+            ])
     })
 
     it ('parsing a string with no codes', () => {
