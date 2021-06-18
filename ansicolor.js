@@ -223,13 +223,14 @@ function rawParse (s) {
 
             case CODE:
 
-                if ((c >= '0') && (c <= '9'))        { code += c }
-                else if (c === ';')                  { codes.push (new Code (code)); code = '' }
-                else if ((c === 'm') && code.length) { codes.push (new Code (code))
-                                                       for (const code of codes) { spans.push ({ text, code }); text = '' }
-                                                       state = TEXT
-                                                     }
-                else                                 { state = TEXT; text += buffer }
+                if ((c >= '0') && (c <= '9')) { code += c }
+                else if (c === ';')           { codes.push (new Code (code)); code = '' }
+                else if ((c === 'm'))         { code = code || '0'
+                                                codes.push (new Code (code))
+                                                for (const code of codes) { spans.push ({ text, code }); text = '' }
+                                                state = TEXT
+                                              }
+                else                          { state = TEXT; text += buffer }
         }
     }
 
