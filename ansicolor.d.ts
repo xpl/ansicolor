@@ -49,7 +49,7 @@ export declare interface RGBValues {
 
 export declare interface AnsicolorMethods {
 
-    (text: string): string; // applies the style to the string
+    (text: string|number): string; // applies the style to the string
 
     default: AnsicolorMethods;
     white: AnsicolorMethods;
