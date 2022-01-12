@@ -372,6 +372,16 @@ class Colors {
     }
 
     /**
+     * @desc checks if a value contains ANSI escape codes
+     * @param {any} s value to check
+     * @return {boolean} has codes
+     */
+     static isEscaped (s) {
+        s = String(s)
+        return Colors.strip (s) !== s;
+    }
+
+    /**
      * @example
      * const spans = [...ansi.parse ('\u001b[7m\u001b[7mfoo\u001b[7mbar\u001b[27m')]
      */

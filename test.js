@@ -277,5 +277,13 @@ describe ('ansicolor', () => {
         same (ansi.cyan(null),      '\u001b[36mnull\u001b[39m')
         same (ansi.cyan(undefined), '\u001b[36mundefined\u001b[39m')
     })
+
+    it ('isEscaped works', () => {
+        assert.equal (ansi.isEscaped(ansi.red('foo')), true);
+        assert.equal (ansi.isEscaped('foo'),           false);
+        assert.equal (ansi.isEscaped(null),            false);
+        assert.equal (ansi.isEscaped(undefined),       false);
+        assert.equal (ansi.isEscaped(42),              false);
+    })
 })
 

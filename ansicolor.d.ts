@@ -153,6 +153,7 @@ export declare class ansicolor {
 
 export function parse (text: string): AnsiColored;
 export function strip (text: string): string;
+export function isEscaped (x?: any): boolean;
 
 export const white: AnsicolorMethods;
 export const black: AnsicolorMethods;

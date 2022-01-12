@@ -120,6 +120,16 @@ const { strip } = require ('ansicolor')
 strip ('\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m')) // 'foofoo'
 ```
 
+## Checking If Strings Contain ANSI Codes
+
+```javascript
+const { isEscaped, green } = require ('ansicolor')
+
+isEscaped ('text')         // false
+isEscaped (green ('text')) // true
+```
+
+
 ## Converting to CSS/HTML
 
 Inspection of ANSI styles in arbitrary strings is essential when implementing platform-agnostic logging — that piece of code is available under command line interface and in a browser as well. Here's an example of how you would parse a colored string into an array-like structure. That structure can be traversed later to build HTML/JSON/XML or any other markup/syntax.
