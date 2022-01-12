@@ -105,6 +105,7 @@ export declare class ansicolor {
 
     static parse (text: string): AnsiColored;
     static strip (text: string): string;
+    static isEscaped (x?: any): boolean;
 
     static get default (): AnsicolorMethods;
     static get white (): AnsicolorMethods;
