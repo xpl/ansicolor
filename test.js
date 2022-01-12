@@ -270,7 +270,12 @@ describe ('ansicolor', () => {
 
         assert.equal (ansi.parse ('foo'.red.bgLightRed).spans[0].css, 'color:rgba(255,0,0,1);background:rgba(255,51,0,1);')
     })
+
+    it ('accepting certain non-string values works', () => {
+
+        same (ansi.cyan(42),        '\u001b[36m42\u001b[39m')
+        same (ansi.cyan(null),      '\u001b[36mnull\u001b[39m')
+        same (ansi.cyan(undefined), '\u001b[36mundefined\u001b[39m')
+    })
 })
-
-
 
