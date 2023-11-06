@@ -9,7 +9,7 @@ const O = Object
 
 const colorCodes      = [   'black',      'red',      'green',      'yellow',      'blue',      'magenta',      'cyan', 'lightGray', '', 'default']
     , colorCodesLight = ['darkGray', 'lightRed', 'lightGreen', 'lightYellow', 'lightBlue', 'lightMagenta', 'lightCyan', 'white', '']
-    
+
     , styleCodes = ['', 'bright', 'dim', 'italic', 'underline', '', '', 'inverse']
 
     , asBright = { 'red':       'lightRed',
@@ -20,7 +20,7 @@ const colorCodes      = [   'black',      'red',      'green',      'yellow',   
                    'cyan':      'lightCyan',
                    'black':     'darkGray',
                    'lightGray': 'white' }
-    
+
     , types = { 0:  'style',
                 2:  'unstyle',
                 3:  'color',
@@ -175,7 +175,7 @@ const stringWrappingMethods = (() => [
         ]),
 
         ...colorCodesLight.map ((k, i) => !k ? [] : [ // light color methods
-            
+
             [k,                90 + i, Code.noColor],
             [camel ('bg', k), 100 + i, Code.noBgColor],
         ]),
@@ -183,17 +183,17 @@ const stringWrappingMethods = (() => [
         /* THIS ONE IS FOR BACKWARDS COMPATIBILITY WITH PREVIOUS VERSIONS (had 'bright' instead of 'light' for backgrounds)
          */
         ...['', 'BrightRed', 'BrightGreen', 'BrightYellow', 'BrightBlue', 'BrightMagenta', 'BrightCyan'].map ((k, i) => !k ? [] : [
-            
+
             ['bg' + k, 100 + i, Code.noBgColor],
         ]),
-        
+
         ...styleCodes.map ((k, i) => !k ? [] : [ // style methods
 
             [k, i, ((k === 'bright') || (k === 'dim')) ? Code.noBrightness : (20 + i)]
         ])
     ]
     .reduce ((a, b) => a.concat (b))
-    
+
 ) ();
 
 /*  ------------------------------------------------------------------------ */
@@ -243,11 +243,15 @@ function* rawParse(getString) {
 
   const ONE_MB = 1048576;
 
+  // Instead of holding the reference to the string we split into chunks of 1MB
+  // and after processing is finished we can remove the reference so it can be GCed
   const chunks = splitStringToChunksOfSize(getString(), ONE_MB);
 
-  while (chunks.length > 0) {
-    const chunk = chunks.shift();
-    yield* processChunk(chunk, stateObject);
+  for (let i = 0; i < chunks.length; i++){
+      const chunk = chunks[i];
+      // Free memory for the previous chunk
+      chunks[i] = undefined;
+      yield* processChunk(chunk, stateObject);
   }
 
   if (stateObject.state !== TEXT) stateObject.text += stateObject.buffer;
@@ -524,26 +528,26 @@ Colors.names = stringWrappingMethods.map (([k]) => k)
 
 Colors.rgb = {
 
-    black:        [0,     0,   0],    
+    black:        [0,     0,   0],
     darkGray:     [100, 100, 100],
     lightGray:    [200, 200, 200],
     white:        [255, 255, 255],
 
     red:          [204,   0,   0],
     lightRed:     [255,  51,   0],
-    
+
     green:        [0,   204,   0],
     lightGreen:   [51,  204,  51],
-    
+
     yellow:       [204, 102,   0],
     lightYellow:  [255, 153,  51],
-    
+
     blue:         [0,     0, 255],
     lightBlue:    [26,  140, 255],
-    
+
     magenta:      [204,   0, 204],
     lightMagenta: [255,   0, 255],
-    
+
     cyan:         [0,   153, 255],
     lightCyan:    [0,   204, 255],
 }
