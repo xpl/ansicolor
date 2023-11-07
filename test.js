@@ -71,32 +71,86 @@ describe ('ansicolor', () => {
         // assert.deepEqual ([...parsed], parsed.spans) // not working in node v4
         assert.equal (parsed[Symbol.iterator] ().next ().value.text, 'foo')
 
-        assert.deepEqual (parsed.spans,
-
-            [ { css: 'font-weight: bold;font-style: italic;text-decoration: underline;background:rgba(255,51,0,1);',
+        assert.deepEqual (parsed.spans, [
+            {
+                css: 'font-weight: bold;font-style: italic;text-decoration: underline;background:rgba(255,51,0,1);',
                 italic: true,
                 bold: true,
                 underline: true,
-                color: { bright: true },
-                bgColor: { name: 'lightRed' },
+                bright: false,
+                dim: false,
+                inverse: false,
+                color: { bright: true,
+                    dim: false,
+                    name: undefined,
+                },
+                bgColor: {
+                    bright: false,
+                    dim: false,
+                    name: 'lightRed'
+                },
                 text: 'foo',
-                code: { value: 49 } },
-
-              { css: 'color:rgba(204,0,0,0.5);',
-                color: { name: 'red', dim: true },
-                text: 'bar',
-                code: { value: 39 } } ])
+                code: {
+                    isBrightness: false,
+                    str: '\u001b[49m',
+                    subtype: 'default',
+                    type: 'bgColor',
+                    value: 49
+                }
+            },
+            {
+                bgColor: undefined,
+                bold: false,
+                bright: false,
+                code: {
+                    isBrightness: false,
+                    str: "\u001b[39m",
+                    subtype: "default",
+                    type: "color",
+                    value: 39
+                },
+                color: {
+                    bright: false,
+                    dim: true,
+                    name: "red",
+                },
+                css: "color:rgba(204,0,0,0.5);",
+                dim: false,
+                inverse: false,
+                italic: false,
+                text: "bar",
+                underline: false,
+            }
+            ])
     })
 
     it ('brightness semantics (CSS)', () => {
 
         const parsed = ansi.parse ('foo'.bright.red)
 
-        assert.deepEqual (parsed.spans,[ {  css: 'font-weight: bold;color:rgba(255,51,0,1);',
-                                            bold: true,
-                                            color: { name: 'red', bright: true },
-                                            text: 'foo',
-                                            code: { value: 22 } }])
+        assert.deepEqual (parsed.spans,[{
+                    bgColor: undefined,
+                    bold: true,
+                    bright: false,
+                    code: {
+                        isBrightness: true,
+                        str: '\u001b[22m',
+                        subtype: 'dim',
+                        type: 'unstyle',
+                        value: 22,
+                    },
+                    color: {
+                        bright: true,
+                        dim: false,
+                        name: 'red',
+                    },
+                    css: 'font-weight: bold;color:rgba(255,51,0,1);',
+                    dim: false,
+                    inverse: false,
+                    italic: false,
+                    text: 'foo',
+                    underline: false,
+        }])
     })
 
     it ('asChromeConsoleLogArguments works', () => {
@@ -116,7 +170,31 @@ describe ('ansicolor', () => {
 
     it ('.dim works in CSS (there was a bug)', () => {
 
-        assert.deepEqual (ansi.parse ('foo'.dim).spans, [ { css: 'color:rgba(0,0,0,0.5);', color: { dim: true }, text: 'foo', code: { value: 22 } } ])
+        assert.deepEqual (ansi.parse ('foo'.dim).spans,[
+            {
+                bgColor: undefined,
+                bold: false,
+                bright: false,
+                code: {
+                    isBrightness: true,
+                    str: '\u001b[22m',
+                    subtype: 'dim',
+                    type: 'unstyle',
+                    value: 22,
+                },
+                color: {
+                    bright: false,
+                    dim: true,
+                    name: undefined,
+                },
+                css: 'color:rgba(0,0,0,0.5);',
+                dim: false,
+                inverse: false,
+                italic: false,
+                text: 'foo',
+                underline: false,
+            }
+        ])
     })
 
     it ('stripping works', () => { // clauses were copypasted from strip-ansi
@@ -206,17 +284,49 @@ describe ('ansicolor', () => {
 
     it ('explicit reset code works', () => {
 
-        assert.deepEqual (ansi.parse ('\u001b[1m\u001b[31mbold_red\u001b[0mreset').spans,
-
-            [ { css: 'font-weight: bold;color:rgba(255,51,0,1);',
+        assert.deepEqual (ansi.parse ('\u001b[1m\u001b[31mbold_red\u001b[0mreset').spans, [
+            {
+                bgColor: undefined,
                 bold: true,
-                color: { name: 'red', bright: true },
+                bright: false,
+                code: {
+                    isBrightness: false,
+                    str: '\u001b[0m',
+                    subtype: '',
+                    type: 'style',
+                    value: 0,
+                },
+                color: {
+                    bright: true,
+                    dim: false,
+                    name: 'red',
+                },
+                css: 'font-weight: bold;color:rgba(255,51,0,1);',
+                dim: false,
+                inverse: false,
+                italic: false,
                 text: 'bold_red',
-                code: { value: 0 } },
-
-              { css: '',
-                text: 'reset',
-                code: {} }
+                underline: false,
+            },
+        {
+            bgColor: undefined,
+            bold: false,
+            bright: false,
+            code: {
+            isBrightness: false,
+            str: '',
+            subtype: undefined,
+            type: undefined,
+            value: undefined,
+        },
+            color: undefined,
+            css: '',
+            dim: false,
+            inverse: false,
+            italic: false,
+            text: 'reset',
+            underline: false,
+        }
         ])
     })
 
@@ -224,37 +334,123 @@ describe ('ansicolor', () => {
 
         assert.deepEqual (ansi.parse ('\u001b[1m\u001b[31mbold_red\u001b[mreset').spans,
 
-            [ { css: 'font-weight: bold;color:rgba(255,51,0,1);',
-                bold: true,
-                color: { name: 'red', bright: true },
-                text: 'bold_red',
-                code: { value: 0 } },
-
-                { css: '',
+            [
+                {
+                    bgColor: undefined,
+                    bold: true,
+                    bright: false,
+                    code: {
+                        isBrightness: false,
+                        str: '\u001b[0m',
+                        subtype: '',
+                        type: 'style',
+                        value: 0,
+                    },
+                    color: {
+                        bright: true,
+                        dim: false,
+                        name: 'red',
+                    },
+                    css: 'font-weight: bold;color:rgba(255,51,0,1);',
+                    dim: false,
+                    inverse: false,
+                    italic: false,
+                    text: 'bold_red',
+                    underline: false,
+                },
+                {
+                    bgColor: undefined,
+                    bold: false,
+                    bright: false,
+                    code: {
+                        isBrightness: false,
+                        str: '',
+                        subtype: undefined,
+                        type: undefined,
+                        value: undefined,
+                    },
+                    color: undefined,
+                    css: '',
+                    dim: false,
+                    inverse: false,
+                    italic: false,
                     text: 'reset',
-                    code: {} }
+                    underline: false,
+                }
             ])
     })
 
     it ('parsing a string with no codes', () => {
 
-        assert.deepEqual (ansi.parse ('foobar').spans,
-
-            [ { css: '',
+        assert.deepEqual (ansi.parse ('foobar').spans,[
+            {
+                bgColor: undefined,
+                bold: false,
+                bright: false,
+                code: {
+                    isBrightness: false,
+                    str: '',
+                    subtype: undefined,
+                    type: undefined,
+                    value: undefined,
+                },
+                color: undefined,
+                css: '',
+                dim: false,
+                inverse: false,
+                italic: false,
                 text: 'foobar',
-                code: {} }
+                underline: false,
+            }
         ])
     })
 
     it ('combined codes work', () => {
 
-        assert.deepEqual (ansi.parse ('\u001b[2;31mfoo🕵️‍bar\u001b[0mbaz').spans,
-
-            [ { css: 'color:rgba(204,0,0,0.5);',
-                color: { name: 'red', dim: true },
+        assert.deepEqual (ansi.parse ('\u001b[2;31mfoo🕵️‍bar\u001b[0mbaz').spans,[
+            {
+                bgColor: undefined,
+                bold: false,
+                bright: false,
+                code: {
+                    isBrightness: false,
+                    str: '\u001b[0m',
+                    subtype: '',
+                    type: 'style',
+                    value: 0,
+                },
+                color: {
+                    bright: false,
+                    dim: true,
+                    name: 'red',
+                },
+                css: 'color:rgba(204,0,0,0.5);',
+                dim: false,
+                inverse: false,
+                italic: false,
                 text: 'foo🕵️‍bar',
-                code: { value: 0 } },
-              { css: '', text: 'baz', code: {} } ])
+                underline: false,
+            },
+            {
+                bgColor: undefined,
+                bold: false,
+                bright: false,
+                code: {
+                    isBrightness: false,
+                    str: '',
+                    subtype: undefined,
+                    type: undefined,
+                    value: undefined,
+                },
+                color: undefined,
+                css: '',
+                dim: false,
+                inverse: false,
+                italic: false,
+                text: 'baz',
+                underline: false,
+            }
+        ])
     })
 
     it ('broken codes do not parse', () => {

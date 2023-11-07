@@ -9,7 +9,7 @@ const O = Object
 
 const colorCodes      = [   'black',      'red',      'green',      'yellow',      'blue',      'magenta',      'cyan', 'lightGray', '', 'default']
     , colorCodesLight = ['darkGray', 'lightRed', 'lightGreen', 'lightYellow', 'lightBlue', 'lightMagenta', 'lightCyan', 'white', '']
-    
+
     , styleCodes = ['', 'bright', 'dim', 'italic', 'underline', '', '', 'inverse']
 
     , asBright = { 'red':       'lightRed',
@@ -20,7 +20,7 @@ const colorCodes      = [   'black',      'red',      'green',      'yellow',   
                    'cyan':      'lightCyan',
                    'black':     'darkGray',
                    'lightGray': 'white' }
-    
+
     , types = { 0:  'style',
                 2:  'unstyle',
                 3:  'color',
@@ -37,19 +37,12 @@ const colorCodes      = [   'black',      'red',      'green',      'yellow',   
 
 /*  ------------------------------------------------------------------------ */
 
-const clean = obj => {
-                for (const k in obj) { if (!obj[k]) { delete obj[k] } }
-                return (O.keys (obj).length === 0) ? undefined : obj
-            }
-
-/*  ------------------------------------------------------------------------ */
-
 class Color {
 
     constructor (background, name, brightness) {
 
         this.background = background
-        this.name       = name
+        this.name = name
         this.brightness = brightness
     }
 
@@ -57,10 +50,20 @@ class Color {
         return new Color (!this.background, this.name || (this.background ? 'black' : 'white'), this.brightness)
     }
 
-    get clean () {
-        return clean ({ name:   this.name === 'default' ? '' : this.name,
-                        bright: this.brightness === Code.bright,
-                        dim:    this.brightness === Code.dim })
+    get clean() {
+      const name = this.name === "default" ? "" : this.name;
+      const bright = this.brightness === Code.bright;
+      const dim = this.brightness === Code.dim;
+
+      if (!name && !bright && !dim) {
+        return undefined;
+      }
+
+      return {
+        name,
+        bright,
+        dim,
+      };
     }
 
     defaultBrightness (value) {
@@ -88,23 +91,45 @@ class Color {
 
 class Code {
 
-    constructor (n) {
-        if (n !== undefined) { this.value = Number (n) } }
+  constructor(n) {
+    let value = undefined;
+    let type = undefined;
+    let subtype = undefined;
+    let str = "";
+    let isBrightness = false;
 
-    get type () {
-       return types[Math.floor (this.value / 10)] }
+    if (n !== undefined) {
+      value = Number(n);
+      type = types[Math.floor(value / 10)];
+      subtype = subtypes[type][value % 10];
+      str = "\u001b[" + value + "m";
+      isBrightness =
+        value === Code.noBrightness ||
+        value === Code.bright ||
+        value === Code.dim;
+    }
 
-    get subtype () {
-        return subtypes[this.type][this.value % 10] }
+    this.value = value;
+    this.type = type;
+    this.subtype = subtype;
+    this.str = str;
+    this.isBrightness = isBrightness;
+  }
 
-    get str () {
-        return (this.value ? ('\u001b\[' + this.value + 'm') : '') }
+  static str(x) {
+    if(x === undefined) return "";
+    return "\u001b[" + Number(x) + "m";
+  }
 
-    static str (x) {
-        return new Code (x).str }
-
-    get isBrightness () {
-        return (this.value === Code.noBrightness) || (this.value === Code.bright) || (this.value === Code.dim) }
+  clone() {
+      const newCode = new Code(undefined);
+      newCode.value = this.value;
+      newCode.type = this.type;
+      newCode.subtype = this.subtype;
+      newCode.str = this.str;
+      newCode.isBrightness = this.isBrightness;
+      return newCode
+  }
 }
 
 /*  ------------------------------------------------------------------------ */
@@ -160,7 +185,7 @@ const stringWrappingMethods = (() => [
         ]),
 
         ...colorCodesLight.map ((k, i) => !k ? [] : [ // light color methods
-            
+
             [k,                90 + i, Code.noColor],
             [camel ('bg', k), 100 + i, Code.noBgColor],
         ]),
@@ -168,17 +193,17 @@ const stringWrappingMethods = (() => [
         /* THIS ONE IS FOR BACKWARDS COMPATIBILITY WITH PREVIOUS VERSIONS (had 'bright' instead of 'light' for backgrounds)
          */
         ...['', 'BrightRed', 'BrightGreen', 'BrightYellow', 'BrightBlue', 'BrightMagenta', 'BrightCyan'].map ((k, i) => !k ? [] : [
-            
+
             ['bg' + k, 100 + i, Code.noBgColor],
         ]),
-        
+
         ...styleCodes.map ((k, i) => !k ? [] : [ // style methods
 
             [k, i, ((k === 'bright') || (k === 'dim')) ? Code.noBrightness : (20 + i)]
         ])
     ]
     .reduce ((a, b) => a.concat (b))
-    
+
 ) ();
 
 /*  ------------------------------------------------------------------------ */
@@ -198,48 +223,203 @@ const TEXT    = 0,
       BRACKET = 1,
       CODE    = 2
 
-function rawParse (s) {
-    
-    let state = TEXT, buffer = '', text = '', code = '', codes = []
-    let spans = []
+class Span {
+  constructor(code, text) {
+    this.code = code;
+    this.text = text;
 
-    for (let i = 0, n = s.length; i < n; i++) {
+    // Those are added in the actual parse, this is done for performance reasons to have the same hidden class
+    this.css = "";
+    this.color = undefined;
+    this.bgColor = undefined;
+    this.bold = undefined;
+    this.inverse = undefined;
+    this.italic = undefined;
+    this.underline = undefined;
+    this.bright = undefined;
+    this.dim = undefined;
+  }
+}
 
-        const c = s[i]
+// getString as function instead of string to allow garbage collection
+function* rawParse(getString) {
+  const stateObject = {
+    state: TEXT,
+    buffer: "",
+    text: "",
+    code: "",
+    codes: [],
+  };
 
-        buffer += c
+  const ONE_MB = 1048576;
 
-        switch (state) {
+  // Instead of holding the reference to the string we split into chunks of 1MB
+  // and after processing is finished we can remove the reference so it can be GCed
+  const chunks = splitStringToChunksOfSize(getString(), ONE_MB);
 
-            case TEXT:
-                if (c === '\u001b') { state = BRACKET; buffer = c; }
-                else                { text += c }
-                break
+  for (let i = 0; i < chunks.length; i++){
+      const chunk = chunks[i];
+      // Free memory for the previous chunk
+      chunks[i] = undefined;
+      yield* processChunk(chunk, stateObject);
+  }
 
-            case BRACKET:
-                if (c === '[') { state = CODE; code = ''; codes = [] }
-                else           { state = TEXT; text += buffer }
-                break
+  if (stateObject.state !== TEXT) stateObject.text += stateObject.buffer;
 
-            case CODE:
+  if (stateObject.text) {
+    yield new Span(new Code(), stateObject.text);
+  }
+}
 
-                if ((c >= '0') && (c <= '9')) { code += c }
-                else if (c === ';')           { codes.push (new Code (code)); code = '' }
-                else if ((c === 'm'))         { code = code || '0'
-                                                codes.push (new Code (code))
-                                                for (const code of codes) { spans.push ({ text, code }); text = '' }
-                                                state = TEXT
-                                              }
-                else                          { state = TEXT; text += buffer }
+function splitStringToChunksOfSize(str, chunkSize) {
+  const chunks = [];
+  const chunksLength = Math.ceil(str.length / chunkSize);
+
+  for (let i = 0, o = 0; i < chunksLength; ++i, o += chunkSize) {
+    chunks.push(str.substring(o, o + chunkSize));
+  }
+
+  return chunks;
+}
+
+function* processChunk(chunk, stateObject) {
+  const chars = chunk;
+  const charsLength = chunk.length;
+
+  for (let i = 0; i < charsLength; i++) {
+    const c = chars[i];
+
+    stateObject.buffer += c;
+
+    switch (stateObject.state) {
+      case TEXT:
+        if (c === "\u001b") {
+          stateObject.state = BRACKET;
+          stateObject.buffer = c;
+        } else {
+          stateObject.text += c;
+        }
+        break;
+
+      case BRACKET:
+        if (c === "[") {
+          stateObject.state = CODE;
+          stateObject.code = "";
+          stateObject.codes = [];
+        } else {
+          stateObject.state = TEXT;
+          stateObject.text += stateObject.buffer;
+        }
+        break;
+
+      case CODE:
+        if (c >= "0" && c <= "9") {
+          stateObject.code += c;
+        } else if (c === ";") {
+          stateObject.codes.push(new Code(stateObject.code));
+          stateObject.code = "";
+        } else if (c === "m") {
+          stateObject.code = stateObject.code || "0";
+          for (const code of stateObject.codes) {
+            yield new Span(code, stateObject.text);
+            stateObject.text = "";
+          }
+
+          yield new Span(new Code(stateObject.code), stateObject.text);
+          stateObject.text = "";
+          stateObject.state = TEXT;
+        } else {
+          stateObject.state = TEXT;
+          stateObject.text += stateObject.buffer;
         }
     }
-
-    if (state !== TEXT) text += buffer
-
-    if (text) spans.push ({ text, code: new Code () })
-
-    return spans
+  }
 }
+
+
+/**
+ * Parse ansi text
+ * @param {Generator<Span, void, *>} rawSpansIterator raw spans iterator
+ * @return {Generator<Span, void, *>}
+ */
+function* parseAnsi(rawSpansIterator) {
+    let color = new Color();
+    let bgColor = new Color(true /* background */);
+    let brightness = undefined;
+    let styles = new Set();
+
+    function reset() {
+        color = new Color();
+        bgColor = new Color(true /* background */);
+        brightness = undefined;
+        styles.clear();
+    }
+
+    reset();
+
+    for (const span of rawSpansIterator) {
+        const c = span.code;
+
+        if(span.text !== "") {
+            const inverted = styles.has("inverse");
+            const underline = styles.has("underline")
+                ? "text-decoration: underline;"
+                : "";
+            const italic = styles.has("italic") ? "font-style: italic;" : "";
+            const bold = brightness === Code.bright ? "font-weight: bold;" : "";
+
+            const foreColor = color.defaultBrightness(brightness);
+
+            const newSpan = new Span(span.code ? span.code.clone() : undefined, span.text);
+
+            newSpan.css = span.css ? span.css : bold + italic + underline + foreColor.css(inverted) + bgColor.css(inverted);
+            newSpan.bold = span.bold ? span.bold : !!bold;
+            newSpan.color = span.color ? span.color : foreColor.clean;
+            newSpan.bgColor = span.bgColor ? span.bgColor : bgColor.clean;
+            newSpan.inverse = inverted;
+            newSpan.italic = !!italic;
+            newSpan.underline = !!underline;
+            newSpan.bright = styles.has("bright");
+            newSpan.dim = styles.has("dim");
+
+            yield newSpan;
+        }
+
+        if (c.isBrightness) {
+            brightness = c.value;
+            continue;
+        }
+
+        if (span.code.value === undefined) {
+            continue;
+        }
+
+        if (span.code.value === Code.reset) {
+            reset();
+            continue;
+        }
+
+        switch (span.code.type) {
+            case "color":
+            case "colorLight":
+                color = new Color(false, c.subtype);
+                break;
+
+            case "bgColor":
+            case "bgColorLight":
+                bgColor = new Color(true, c.subtype);
+                break;
+
+            case "style":
+                styles.add(c.subtype);
+                break;
+            case "unstyle":
+                styles.delete(c.subtype);
+                break;
+        }
+    }
+}
+
 
 /*  ------------------------------------------------------------------------ */
 
@@ -252,8 +432,7 @@ class Colors {
      * @param {string} s a string containing ANSI escape codes.
      */
     constructor (s) {
-
-        this.spans = s ? rawParse (s) : []
+        this.spans = s ? Array.from(rawParse(typeof s === 'string' ? () => s : s)) : []
     }
 
     get str () {
@@ -261,68 +440,11 @@ class Colors {
     }
 
     get parsed () {
+        const newColors = new Colors();
 
-        let color, bgColor, brightness, styles
+        newColors.spans = Array.from(parseAnsi(this.spans));
 
-        function reset () {
-
-            color      = new Color (),
-            bgColor    = new Color (true /* background */),
-            brightness = undefined,
-            styles     = new Set ()
-        }
-
-        reset ()
-
-        return O.assign (new Colors (), {
-
-            spans: this.spans.map (span => {
-
-                const c = span.code
-
-                const inverted  = styles.has ('inverse'),
-                      underline = styles.has ('underline')   ? 'text-decoration: underline;' : '',                      
-                      italic    = styles.has ('italic')      ? 'font-style: italic;' : '',
-                      bold      = brightness === Code.bright ? 'font-weight: bold;' : ''
-
-                const foreColor = color.defaultBrightness (brightness)
-
-                const styledSpan = O.assign (
-                                        { css: bold + italic + underline + foreColor.css (inverted) + bgColor.css (inverted) },
-                                        clean ({ bold: !!bold, color: foreColor.clean, bgColor: bgColor.clean }),
-                                        span)
-
-                for (const k of styles) { styledSpan[k] = true }
-
-                if (c.isBrightness) {
-
-                    brightness = c.value
-                
-                } else if (span.code.value !== undefined) {
-
-                    if (span.code.value === Code.reset) {
-                        reset ()
-
-                    } else {
-
-                        switch (span.code.type) {
-
-                            case 'color'        :
-                            case 'colorLight'   : color   = new Color (false, c.subtype); break
-
-                            case 'bgColor'      :
-                            case 'bgColorLight' : bgColor = new Color (true,  c.subtype); break
-
-                            case 'style'  : styles.add    (c.subtype); break
-                            case 'unstyle': styles.delete (c.subtype); break
-                        }
-                    }
-                }
-
-                return styledSpan
-
-            }).filter (s => s.text.length > 0)
-        })
+        return newColors;
     }
 
 /*  Outputs with Chrome DevTools-compatible format     */
@@ -360,6 +482,15 @@ class Colors {
      */
     static parse (s) {
         return new Colors (s).parsed
+    }
+
+    /**
+     *
+     * @param {string | () => string} s string or a function returning a string (for large strings you may want to use a function to avoid memory issues)
+     * @returns {Generator<Span, void, *>} Spans iterator
+     */
+    static parseIterator(s) {
+        return parseAnsi(rawParse(typeof s === "string" ? () => s : s));
     }
 
     /**
@@ -411,26 +542,26 @@ Colors.names = stringWrappingMethods.map (([k]) => k)
 
 Colors.rgb = {
 
-    black:        [0,     0,   0],    
+    black:        [0,     0,   0],
     darkGray:     [100, 100, 100],
     lightGray:    [200, 200, 200],
     white:        [255, 255, 255],
 
     red:          [204,   0,   0],
     lightRed:     [255,  51,   0],
-    
+
     green:        [0,   204,   0],
     lightGreen:   [51,  204,  51],
-    
+
     yellow:       [204, 102,   0],
     lightYellow:  [255, 153,  51],
-    
+
     blue:         [0,     0, 255],
     lightBlue:    [26,  140, 255],
-    
+
     magenta:      [204,   0, 204],
     lightMagenta: [255,   0, 255],
-    
+
     cyan:         [0,   153, 255],
     lightCyan:    [0,   204, 255],
 }

@@ -153,6 +153,7 @@ export declare class ansicolor {
 }
 
 export function parse (text: string): AnsiColored;
+export function parseIterator (textOrGetText: string | (() => string)): Iterator<ParsedSpan>;
 export function strip (text: string): string;
 export function isEscaped (x?: any): boolean;
 

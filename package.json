@@ -1,6 +1,6 @@
 {
   "name": "ansicolor",
-  "version": "1.1.100",
+  "version": "2.0.0",
   "description": "A JavaScript ANSI color/style management. ANSI parsing. ANSI to CSS. Small, clean, no dependencies.",
   "main": "./build/ansicolor.js",
   "types": "./ansicolor.d.ts",
@@ -94,7 +94,7 @@
   "devDependencies": {
     "@types/node": "^13.7.0",
     "babel-cli": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2016": "^6.24.1",
     "coveralls": "^3.0.3",
     "eslint": "^4.19.1",
     "istanbul": "^0.4.5",
