@@ -120,6 +120,16 @@ class Code {
     if(x === undefined) return "";
     return "\u001b[" + Number(x) + "m";
   }
+
+  clone() {
+      const newCode = new Code(undefined);
+      newCode.value = this.value;
+      newCode.type = this.type;
+      newCode.subtype = this.subtype;
+      newCode.str = this.str;
+      newCode.isBrightness = this.isBrightness;
+      return newCode
+  }
 }
 
 /*  ------------------------------------------------------------------------ */
@@ -220,8 +230,8 @@ class Span {
 
     // Those are added in the actual parse, this is done for performance reasons to have the same hidden class
     this.css = "";
-    this.color = "";
-    this.bgColor = "";
+    this.color = {};
+    this.bgColor = {};
     this.bold = undefined;
     this.inverse = undefined;
     this.italic = undefined;
@@ -350,27 +360,28 @@ function* parseAnsi(rawSpansIterator) {
     for (const span of rawSpansIterator) {
         const c = span.code;
 
-        const inverted = styles.has("inverse");
-        const underline = styles.has("underline")
-            ? "text-decoration: underline;"
-            : "";
-        const italic = styles.has("italic") ? "font-style: italic;" : "";
-        const bold = brightness === Code.bright ? "font-weight: bold;" : "";
-
-        const foreColor = color.defaultBrightness(brightness);
-
-        span.css = bold + italic + underline + foreColor.css(inverted) + bgColor.css(inverted);
-        span.bold = !!bold;
-        span.color = foreColor.clean;
-        span.bgColor = bgColor.clean;
-        span.inverse = inverted;
-        span.italic = !!italic;
-        span.underline = !!underline;
-        span.bright = styles.has("bright");
-        span.dim = styles.has("dim");
-
         if(span.text !== "") {
-            yield span;
+            const inverted = styles.has("inverse");
+            const underline = styles.has("underline")
+                ? "text-decoration: underline;"
+                : "";
+            const italic = styles.has("italic") ? "font-style: italic;" : "";
+            const bold = brightness === Code.bright ? "font-weight: bold;" : "";
+
+            const foreColor = color.defaultBrightness(brightness);
+
+            const newSpan = new Span(span.code ? span.code.clone() : undefined, span.text);
+            newSpan.css = bold + italic + underline + foreColor.css(inverted) + bgColor.css(inverted);
+            newSpan.bold = !!bold;
+            newSpan.color = foreColor.clean;
+            newSpan.bgColor = bgColor.clean;
+            newSpan.inverse = inverted;
+            newSpan.italic = !!italic;
+            newSpan.underline = !!underline;
+            newSpan.bright = styles.has("bright");
+            newSpan.dim = styles.has("dim");
+
+            yield newSpan;
         }
 
         if (c.isBrightness) {
