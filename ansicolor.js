@@ -42,7 +42,7 @@ class Color {
     constructor (background, name, brightness) {
 
         this.background = background
-        this.name       = name
+        this.name = name
         this.brightness = brightness
     }
 
@@ -230,8 +230,8 @@ class Span {
 
     // Those are added in the actual parse, this is done for performance reasons to have the same hidden class
     this.css = "";
-    this.color = {};
-    this.bgColor = {};
+    this.color = undefined;
+    this.bgColor = undefined;
     this.bold = undefined;
     this.inverse = undefined;
     this.italic = undefined;
@@ -371,10 +371,11 @@ function* parseAnsi(rawSpansIterator) {
             const foreColor = color.defaultBrightness(brightness);
 
             const newSpan = new Span(span.code ? span.code.clone() : undefined, span.text);
-            newSpan.css = bold + italic + underline + foreColor.css(inverted) + bgColor.css(inverted);
-            newSpan.bold = !!bold;
-            newSpan.color = foreColor.clean;
-            newSpan.bgColor = bgColor.clean;
+
+            newSpan.css = span.css ? span.css : bold + italic + underline + foreColor.css(inverted) + bgColor.css(inverted);
+            newSpan.bold = span.bold ? span.bold : !!bold;
+            newSpan.color = span.color ? span.color : foreColor.clean;
+            newSpan.bgColor = span.bgColor ? span.bgColor : bgColor.clean;
             newSpan.inverse = inverted;
             newSpan.italic = !!italic;
             newSpan.underline = !!underline;
