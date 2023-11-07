@@ -11,6 +11,7 @@ import Colors from './ansicolor.js'
 
 export const nice = Colors.nice
 export const parse = Colors.parse
+export const parseIterator = Colors.parseIterator
 export const strip = Colors.strip
 export const ansicolor = Colors.ansicolor
 export const black = Colors.black
