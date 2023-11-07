@@ -369,7 +369,9 @@ function* parseAnsi(rawSpansIterator) {
         span.bright = styles.has("bright");
         span.dim = styles.has("dim");
 
-        yield span;
+        if(span.text !== "") {
+            yield span;
+        }
 
         if (c.isBrightness) {
             brightness = c.value;
