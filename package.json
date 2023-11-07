@@ -5,13 +5,18 @@
   "main": "./build/ansicolor.js",
   "types": "./ansicolor.d.ts",
   "scripts": {
-    "lint": "eslint ansicolor.js",
-    "lint-test": "eslint test.js",
     "babel": "babel ansicolor.js --source-maps inline --out-file ./build/ansicolor.js",
     "build": "npm run lint && npm run lint-test && npm run babel",
     "test": "npm run build && nyc --reporter=html --reporter=text env ANSICOLOR_MODULE='./build/ansicolor' mocha --reporter spec",
     "autotest": "env ANSICOLOR_MODULE='./ansicolor' mocha --reporter spec --watch",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "prepare": "husky install",
+    "format": "prettier --write ansicolor.js test.js",
+    "lint": "eslint ansicolor.js test.js --fix",
+    "semantic-release": "semantic-release"
+  },
+  "lint-staged": {
+    "*.js": ["prettier --write", "eslint --fix"]
   },
   "repository": {
     "type": "git",
@@ -93,13 +98,24 @@
   },
   "homepage": "https://xpl.github.io/ansicolor",
   "devDependencies": {
+    "@commitlint/cli": "^17.3.0",
+    "@commitlint/config-conventional": "^17.3.0",
     "@types/node": "^13.7.0",
     "babel-cli": "^6.26.0",
     "babel-preset-es2016": "^6.24.1",
     "coveralls": "^3.0.3",
-    "eslint": "^4.19.1",
+    "eslint": "^8.31.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
     "istanbul": "^0.4.5",
+    "lint-staged": "^15.0.2",
     "mocha": "^5.2.0",
-    "nyc": "^14.1.1"
+    "nyc": "^14.1.1",
+    "prettier": "^2.8.1",
+    "semantic-release": "^19.0.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,0 +1,61 @@
+name: Node CI
+on: [ push, pull_request ]
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install Dependencies
+        run: npm i
+
+      - name: Format
+        run: npm run format
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Coverage
+        run: npm run coveralls
+
+  deploy:
+    runs-on: ubuntu-22.04
+    needs: test
+
+    # Run only on pushing to main
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install Dependencies
+        run: npm i
+
+      - name: Build
+        run: npm run build
+
+      - name: Release to NPM
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Enable npm provenance - (doing here so when we have tests that actually publish to local npm registry they won't fail)
+          npm_config_provenance: true
+        run: npx semantic-release
