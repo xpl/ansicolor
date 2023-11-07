@@ -43,3 +43,6 @@ doc
 
 # VS Code
 settings.json
+
+# Ignore generated file
+build/ansicolor.js
