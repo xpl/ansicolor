@@ -19,7 +19,8 @@
   },
   "exports": {
     "import": "./build/ansicolor.mjs",
-    "require": "./build/ansicolor.js"
+    "require": "./build/ansicolor.js",
+    "types": "./ansicolor.d.ts"
   },
   "keywords": [
     "ANSI",
