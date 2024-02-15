@@ -101,6 +101,9 @@ class Code {
     if (n !== undefined) {
       value = Number(n);
       type = types[Math.floor(value / 10)];
+      if (type === undefined || subtypes[type] === undefined) {
+        return;
+      }
       subtype = subtypes[type][value % 10];
       str = "\u001b[" + value + "m";
       isBrightness =

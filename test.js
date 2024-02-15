@@ -481,5 +481,9 @@ describe ('ansicolor', () => {
         assert.equal (ansi.isEscaped(undefined),       false);
         assert.equal (ansi.isEscaped(42),              false);
     })
+
+    it ('accepting non ansii colors works', () => {
+        assert.doesNotThrow (() => ansi.parse('\u001b[253mtest\u001b[39m'));
+    })
 })
 
