@@ -26,9 +26,6 @@ jobs:
       - name: Test
         run: npm run test
 
-      - name: Coverage
-        run: npm run coveralls
-
   deploy:
     runs-on: ubuntu-22.04
     needs: test
