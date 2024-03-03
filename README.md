@@ -1,6 +1,6 @@
 # ansicolor
 
-[![Build Status](https://travis-ci.org/xpl/ansicolor.svg?branch=master)](https://travis-ci.org/xpl/ansicolor) [![Coverage Status](https://coveralls.io/repos/github/xpl/ansicolor/badge.svg)](https://coveralls.io/github/xpl/ansicolor) [![npm](https://img.shields.io/npm/v/ansicolor.svg)](https://npmjs.com/package/ansicolor) [![dependencies Status](https://david-dm.org/xpl/ansicolor/status.svg)](https://david-dm.org/xpl/ansicolor)
+[![npm](https://img.shields.io/npm/v/ansicolor.svg)](https://npmjs.com/package/ansicolor)
 
 A JavaScript ANSI color/style management. ANSI parsing. ANSI to CSS. Small, clean, no dependencies.
 
